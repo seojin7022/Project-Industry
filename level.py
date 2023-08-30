@@ -11,6 +11,8 @@ class Level:
         self.obstacle_sprites = pygame.sprite.Group()
 
         self.prior_mouse_pos = pygame.mouse.get_pos()
+        self.mouse_pos = pygame.mouse.get_pos()
+        self.offset = (0, 0)
 
         self.create_map()
     
@@ -27,12 +29,22 @@ class Level:
     def drag(self):
         mouse = pygame.mouse.get_pressed()
         
-        self.offset = (0, 0)
-        self.prior_mouse_pos = pygame.mouse.get_pos()
+        
+        
 
         if (mouse[0]):
             current_mouse_pos = pygame.mouse.get_pos()
-            self.offset = ((current_mouse_pos[0] - self.prior_mouse_pos[0]) * 0.2, (current_mouse_pos[1] - self.prior_mouse_pos[1]) * 0.2)
+            if current_mouse_pos != self.mouse_pos:
+                self.offset = (self.offset[0] + (current_mouse_pos[0] - self.prior_mouse_pos[0]) * 0.2,self.offset[1] + (current_mouse_pos[1] - self.prior_mouse_pos[1]) * 0.2)
+            else:
+                self.prior_mouse_pos = current_mouse_pos
+
+        
+        elif (mouse[0] == 0):
+            self.prior_mouse_pos = pygame.mouse.get_pos()
+            
+        
+        self.mouse_pos = pygame.mouse.get_pos()
 
     def run(self):
         self.drag()
@@ -45,7 +57,13 @@ class SortCamera(pygame.sprite.Group):
         self.display_surf = pygame.display.get_surface()
 
     def custom_draw(self, offset):
+        print(offset)
         for sprite in self.sprites():
-            sprite.rect.left += offset[0]
-            sprite.rect.top += offset[1]
-            self.display_surf.blit(sprite.image, sprite.rect)
+            
+            
+
+            new_rect = sprite.rect.copy()
+            new_rect.left += offset[0]
+            new_rect.top += offset[1]
+            self.display_surf.blit(sprite.image, new_rect)
+            
