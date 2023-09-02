@@ -1,7 +1,8 @@
-import pygame
+import pygame, os, json
 from settings import *
 from tile import Tile
 from pytmx.util_pygame import load_pygame
+from gui import Button, Frame, Text
 
 class Level:
     def __init__(self) -> None:
@@ -9,6 +10,7 @@ class Level:
 
         self.visible_sprites = SortCamera()
         self.obstacle_sprites = pygame.sprite.Group()
+        self.gui_sprites = MainGUI()
 
         self.prior_mouse_pos = pygame.mouse.get_pos()
         self.mouse_pos = pygame.mouse.get_pos()
@@ -23,7 +25,6 @@ class Level:
             if hasattr(layer, 'data'):
                 if layer.name == "Floor":
                     for x, y, surf in layer.tiles():
-                        print((x * TILE_SIZE, y * TILE_SIZE))
                         Tile(self.visible_sprites, (x * TILE_SIZE, y * TILE_SIZE), surf)
 
     def drag(self):
@@ -50,6 +51,7 @@ class Level:
         self.drag()
         self.visible_sprites.update()
         self.visible_sprites.custom_draw(self.offset)
+        self.gui_sprites.custom_draw()
 
 class SortCamera(pygame.sprite.Group):
     def __init__(self) -> None:
@@ -57,7 +59,6 @@ class SortCamera(pygame.sprite.Group):
         self.display_surf = pygame.display.get_surface()
 
     def custom_draw(self, offset):
-        print(offset)
         for sprite in self.sprites():
             
             
@@ -66,4 +67,45 @@ class SortCamera(pygame.sprite.Group):
             new_rect.left += offset[0]
             new_rect.top += offset[1]
             self.display_surf.blit(sprite.image, new_rect)
-            
+
+
+class MainGUI(pygame.sprite.Group):
+    def __init__(self) -> None:
+        super().__init__()
+        self.frames = []
+        self.buttons = []
+        self.texts = []
+
+        self.display_surf = pygame.display.get_surface()
+
+        self.load_guis()
+
+    def load_guis(self):
+        for i in os.listdir("./gui/main_gui"):
+            if i == "button":
+                for button in os.listdir("./gui/main_gui/button"):
+                    print(os.path.exists(f"./gui/main_gui/button/{button}"))
+                    self.buttons.append(Button(pygame.image.load(f"./gui/main_gui/button/{button}").convert_alpha()))
+            elif i == "frame":
+                for frame in os.listdir(f"./gui/main_gui/{i}"):
+                    self.frames.append(Frame(pygame.image.load(f"./gui/main_gui/{i}/{frame}").convert_alpha()))
+            elif i == "text":
+                for text in os.listdir(f"./gui/main_gui/{i}"):
+                    with open(f"./gui/main_gui/{i}/{text}", 'r') as text_data:
+                        text_data = json.loads(text_data.read())
+                        font = text_data["font"]
+                        text = text_data["text"]
+                        position = text_data["position"]
+                        font_size = text_data["font-size"]
+                        self.texts.append(Text(font, int(font_size), text, (int(position.split(",")[0]), int(position.split(",")[1]))))
+                        print(map(int, position.split(",")))
+
+    def custom_draw(self):
+        for frame in self.frames:
+            self.display_surf.blit(frame.image, (0, 0))
+
+        for button in self.buttons:
+            self.display_surf.blit(button.image, (0, 0))
+
+        for text in self.texts:
+            self.display_surf.blit(text.render(), text.position)

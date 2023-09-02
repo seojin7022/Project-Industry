@@ -4,7 +4,7 @@ from level import Level
 
 class Game: #게임 클래스
     def __init__(self) -> None:
-        
+        pygame.init()
         self.screen = pygame.display.set_mode(WINDOW_SIZE, pygame.FULLSCREEN)
 
         self.level = Level()
