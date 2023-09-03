@@ -17,6 +17,9 @@ class Button(GUI):
     def __init__(self, surf) -> None:
         super().__init__(surf)
 
+    def hover(self):
+        pass
+
 class Text():
     def __init__(self, font, font_size, text, position) -> None:
         self.font_size = font_size

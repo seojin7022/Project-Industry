@@ -9,6 +9,7 @@ class Tile(pygame.sprite.Sprite):
         self.image = surf
         self.rect = self.image.get_rect()
         self.rect.topleft = pos
+        self.real_rect = self.rect.copy()
 
 
         # Hello World!

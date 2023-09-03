@@ -3,18 +3,23 @@ from settings import *
 from tile import Tile
 from pytmx.util_pygame import load_pygame
 from gui import Button, Frame, Text
+from edit import Edit
+from objects import Conveyer
 
 class Level:
     def __init__(self) -> None:
         self.display_surf = pygame.display.get_surface()
 
         self.visible_sprites = SortCamera()
+        self.floor_sprites = pygame.sprite.Group()
         self.obstacle_sprites = pygame.sprite.Group()
         self.gui_sprites = MainGUI()
 
         self.prior_mouse_pos = pygame.mouse.get_pos()
         self.mouse_pos = pygame.mouse.get_pos()
         self.offset = (0, 0)
+
+        self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png").convert()))
 
         self.create_map()
     
@@ -25,7 +30,7 @@ class Level:
             if hasattr(layer, 'data'):
                 if layer.name == "Floor":
                     for x, y, surf in layer.tiles():
-                        Tile(self.visible_sprites, (x * TILE_SIZE, y * TILE_SIZE), surf)
+                        Tile([self.visible_sprites, self.floor_sprites], (x * TILE_SIZE, y * TILE_SIZE), surf)
 
     def drag(self):
         mouse = pygame.mouse.get_pressed()
@@ -33,7 +38,7 @@ class Level:
         
         
 
-        if (mouse[0]):
+        if (mouse[2]):
             current_mouse_pos = pygame.mouse.get_pos()
             if current_mouse_pos != self.mouse_pos:
                 self.offset = (self.offset[0] + (current_mouse_pos[0] - self.prior_mouse_pos[0]) * 0.2,self.offset[1] + (current_mouse_pos[1] - self.prior_mouse_pos[1]) * 0.2)
@@ -42,17 +47,34 @@ class Level:
                 self.prior_mouse_pos = current_mouse_pos
 
         
-        elif (mouse[0] == 0):
+        elif (mouse[2] == 0):
             self.prior_mouse_pos = pygame.mouse.get_pos()
             
         
         self.mouse_pos = pygame.mouse.get_pos()
 
+    def click_button(self):
+        mouse = pygame.mouse.get_pressed()
+
+        if (mouse[0]):
+            for button in self.gui_sprites.buttons:
+                button:Button
+                if button.rect.collidepoint(pygame.mouse.get_pos()):
+                    if button.name == "UI_E.png" and not self.gui_sprites.isEdit:
+                        self.gui_sprites.isEdit = True
+                        self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png").convert()))
+
+    def Edit(self):
+        self.edit_system.run(self.floor_sprites, self.offset)
+
     def run(self):
         self.drag()
+        self.click_button()
         self.visible_sprites.update()
         self.visible_sprites.custom_draw(self.offset)
         self.gui_sprites.custom_draw()
+        if self.gui_sprites.isEdit:
+            self.Edit()
 
 class SortCamera(pygame.sprite.Group):
     def __init__(self) -> None:
@@ -62,6 +84,7 @@ class SortCamera(pygame.sprite.Group):
     def custom_draw(self, offset):
         for sprite in self.sprites():
             self.display_surf.blit(sprite.image, (sprite.rect.left + offset[0], sprite.rect.top + offset[1]))
+            sprite.real_rect.topleft = (sprite.rect.left + offset[0], sprite.rect.top + offset[1])
 
 
 class MainGUI(pygame.sprite.Group):
@@ -72,6 +95,8 @@ class MainGUI(pygame.sprite.Group):
         self.texts = []
 
         self.display_surf = pygame.display.get_surface()
+
+        self.isEdit = False
 
         BUTTON_SIZE = 97
 
