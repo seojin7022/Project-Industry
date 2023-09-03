@@ -1,4 +1,4 @@
-import pygame, os, json
+import pygame, os, json, math
 from settings import *
 from tile import Tile
 from pytmx.util_pygame import load_pygame
@@ -37,6 +37,7 @@ class Level:
             current_mouse_pos = pygame.mouse.get_pos()
             if current_mouse_pos != self.mouse_pos:
                 self.offset = (self.offset[0] + (current_mouse_pos[0] - self.prior_mouse_pos[0]) * 0.2,self.offset[1] + (current_mouse_pos[1] - self.prior_mouse_pos[1]) * 0.2)
+                self.offset = (max(min(TILE_SIZE * 3, self.offset[0]), TILE_SIZE * -18), max(min(TILE_SIZE * 3, self.offset[1]), TILE_SIZE * -24))
             else:
                 self.prior_mouse_pos = current_mouse_pos
 
@@ -60,13 +61,7 @@ class SortCamera(pygame.sprite.Group):
 
     def custom_draw(self, offset):
         for sprite in self.sprites():
-            
-            
-
-            new_rect = sprite.rect.copy()
-            new_rect.left += offset[0]
-            new_rect.top += offset[1]
-            self.display_surf.blit(sprite.image, new_rect)
+            self.display_surf.blit(sprite.image, (sprite.rect.left + offset[0], sprite.rect.top + offset[1]))
 
 
 class MainGUI(pygame.sprite.Group):
@@ -78,14 +73,45 @@ class MainGUI(pygame.sprite.Group):
 
         self.display_surf = pygame.display.get_surface()
 
+        BUTTON_SIZE = 97
+
+        self.structure = {
+            "UI_Bank.png": {
+                "position": (10, BUTTON_SIZE * 2),
+            },
+
+            "UI_E.png": {
+                "position": (10, BUTTON_SIZE * 3),
+            },
+
+            "UI_Finance.png": {
+                "position": (10, BUTTON_SIZE * 4),
+            },
+
+            "UI_Info.png": {
+                "position": (10, BUTTON_SIZE * 5),
+            },
+
+            "UI_Menu.png": {
+                "position": (1920 - BUTTON_SIZE, 0),
+            },
+
+            "UI_Store.png": {
+                "position": (10, BUTTON_SIZE * 6)
+            }
+
+        }
+
         self.load_guis()
 
     def load_guis(self):
         for i in os.listdir("./gui/main_gui"):
             if i == "button":
                 for button in os.listdir("./gui/main_gui/button"):
-                    print(os.path.exists(f"./gui/main_gui/button/{button}"))
-                    self.buttons.append(Button(pygame.image.load(f"./gui/main_gui/button/{button}").convert_alpha()))
+                    newButton = Button(pygame.image.load(f"./gui/main_gui/button/{button}").convert_alpha())
+                    newButton.name = button
+                    newButton.rect.topleft = self.structure[button]["position"]
+                    self.buttons.append(newButton)
             elif i == "frame":
                 for frame in os.listdir(f"./gui/main_gui/{i}"):
                     self.frames.append(Frame(pygame.image.load(f"./gui/main_gui/{i}/{frame}").convert_alpha()))
@@ -98,14 +124,13 @@ class MainGUI(pygame.sprite.Group):
                         position = text_data["position"]
                         font_size = text_data["font-size"]
                         self.texts.append(Text(font, int(font_size), text, (int(position.split(",")[0]), int(position.split(",")[1]))))
-                        print(map(int, position.split(",")))
 
     def custom_draw(self):
         for frame in self.frames:
-            self.display_surf.blit(frame.image, (0, 0))
+            self.display_surf.blit(frame.image, frame.rect)
 
         for button in self.buttons:
-            self.display_surf.blit(button.image, (0, 0))
+            self.display_surf.blit(button.image, button.rect)
 
         for text in self.texts:
             self.display_surf.blit(text.render(), text.position)
