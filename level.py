@@ -19,6 +19,8 @@ class Level:
         self.mouse_pos = pygame.mouse.get_pos()
         self.offset = (0, 0)
 
+        self.mouse_pressed = False
+
         self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png").convert()))
 
         self.create_map()
@@ -37,7 +39,7 @@ class Level:
         
         
         
-
+        
         if (mouse[2]):
             current_mouse_pos = pygame.mouse.get_pos()
             if current_mouse_pos != self.mouse_pos:
@@ -56,13 +58,19 @@ class Level:
     def click_button(self):
         mouse = pygame.mouse.get_pressed()
 
-        if (mouse[0]):
+        if (mouse[0] and not self.mouse_pressed):
+            self.mouse_pressed = True
             for button in self.gui_sprites.buttons:
                 button:Button
                 if button.rect.collidepoint(pygame.mouse.get_pos()):
                     if button.name == "UI_E.png" and not self.gui_sprites.isEdit:
                         self.gui_sprites.isEdit = True
                         self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png").convert()))
+                    elif button.name == "UI_E.png" and self.gui_sprites.isEdit:
+                        self.gui_sprites.isEdit = False
+
+        elif (mouse[0] == 0):
+            self.mouse_pressed = False
 
     def Edit(self):
         self.edit_system.run(self.floor_sprites, self.offset)
@@ -72,9 +80,9 @@ class Level:
         self.click_button()
         self.visible_sprites.update()
         self.visible_sprites.custom_draw(self.offset)
-        self.gui_sprites.custom_draw()
         if self.gui_sprites.isEdit:
             self.Edit()
+        self.gui_sprites.custom_draw()
 
 class SortCamera(pygame.sprite.Group):
     def __init__(self) -> None:
