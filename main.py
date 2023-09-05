@@ -14,6 +14,9 @@ class Game: #게임 클래스
         self.window = Window("Factory", WINDOW_SIZE, fullscreen_desktop=True)
         self.renderer = Renderer(self.window)
         
+        surf = pygame.Surface(WINDOW_SIZE)
+        surf.fill((255,255,255))
+        self.background = Texture.from_surface(self.renderer, surf)
         
 
         self.level = Level([self.window, self.renderer])
@@ -30,6 +33,7 @@ class Game: #게임 클래스
 
             
             self.renderer.clear()
+            self.renderer.blit(self.background, pygame.Rect(0, 0, WINDOW_SIZE[0], WINDOW_SIZE[1]))
             self.level.run()
             
             self.renderer.present()

@@ -13,6 +13,7 @@ class Conveyer(pygame.sprite.Sprite):
         self.position = (0, 0)
         if type(surf) == Image:
             self.image = Image(surf.texture)
+            self.image.angle = surf.angle
         else:
             self.image = Image(Texture.from_surface(app[1], surf))
         self.rect = self.image.get_rect()
