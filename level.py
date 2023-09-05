@@ -26,7 +26,8 @@ class Level:
         self.mouse_pressed = False
 
         self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png").convert()))
-
+    
+        
         Ingredient([self.visible_sprites, self.ingredient_sprites], "Stone")
 
         self.create_map()
@@ -100,6 +101,7 @@ class Level:
                     self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.direction
                     newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
                     self.visible_sprites.add(newConveyer)
+                    Ingredient([self.visible_sprites, self.ingredient_sprites], "Stone")
                     
                     
 
