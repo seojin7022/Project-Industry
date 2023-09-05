@@ -11,12 +11,12 @@ from level import Level
 class Game: #게임 클래스
     def __init__(self) -> None:
         pygame.init()
-        self.screen = pygame.display.set_mode(WINDOW_SIZE, pygame.FULLSCREEN)
-        
+        self.window = Window("Factory", WINDOW_SIZE, fullscreen_desktop=True)
+        self.renderer = Renderer(self.window)
         
         
 
-        self.level = Level()
+        self.level = Level([self.window, self.renderer])
 
         self.clock = pygame.time.Clock()
         
@@ -28,11 +28,11 @@ class Game: #게임 클래스
                     pygame.quit()
                     sys.exit()
 
-            self.screen.fill((255, 255, 255))
-            # self.renderer.clear()
+            
+            self.renderer.clear()
             self.level.run()
-            pygame.display.update()
-            # self.renderer.present()
+            
+            self.renderer.present()
             self.clock.tick(FPS)
 
 if __name__ == "__main__":

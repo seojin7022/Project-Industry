@@ -1,21 +1,24 @@
-import pygame, os, json, math
+import pygame, os, json
+from pygame._sdl2 import *
 from settings import *
 from tile import Tile
-from pytmx.util_pygame import load_pygame
+from pytmx.util_pygame_sdl2 import load_pygame_sdl2
 from gui import Button, Frame, Text
 from edit import Edit
 from objects import Conveyer, Ingredient
 
 class Level:
-    def __init__(self) -> None:
-        self.display_surf = pygame.display.get_surface()
+    def __init__(self, app) -> None:
+        self.app = app
+        self.window = app[0]
+        self.renderer = app[1]
 
-        self.visible_sprites = SortCamera()
+        self.visible_sprites = SortCamera(app)
         self.floor_sprites = pygame.sprite.Group()
         self.obstacle_sprites = pygame.sprite.Group()
-        self.gui_sprites = MainGUI()
-        self.edit_gui_sprites = EditGUI()
-        self.ingredient_sprites = SortCamera()
+        self.gui_sprites = MainGUI(app)
+        self.edit_gui_sprites = EditGUI(app)
+        self.ingredient_sprites = SortCamera(app)
 
         self.prior_mouse_pos = pygame.mouse.get_pos()
         self.mouse_pos = pygame.mouse.get_pos()
@@ -25,22 +28,22 @@ class Level:
 
         self.mouse_pressed = False
 
-        self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png").convert()))
+        self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png"), self.app), self.app)
     
         
-        Ingredient([self.visible_sprites, self.ingredient_sprites], "Stone")
+        Ingredient([self.visible_sprites, self.ingredient_sprites], "Stone", self.app)
 
         self.create_map()
         
     
     def create_map(self):
-        tilemap = load_pygame("Tilemap/map.tmx")
+        tilemap = load_pygame_sdl2(self.app[1], "Tilemap/map.tmx")
         
         for layer in tilemap.layers:
             if hasattr(layer, 'data'):
                 if layer.name == "Floor":
                     for x, y, surf in layer.tiles():
-                        Tile([self.visible_sprites, self.floor_sprites], (x * TILE_SIZE, y * TILE_SIZE), surf, (x, y))
+                        Tile([self.visible_sprites, self.floor_sprites], surf, (x * TILE_SIZE, y * TILE_SIZE), (x, y))
 
     def drag(self):
         mouse = pygame.mouse.get_pressed()
@@ -87,21 +90,21 @@ class Level:
                         isGuiCollide = True
                         if button.name == "UI_Conveyer_R.png":
                             
-                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png").convert(), direction="R")
+                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png"),self.app, direction="R")
                         elif button.name == "UI_Conveyer_RT.png":
-                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-2.png").convert(), direction="RT")
+                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-2.png"),self.app, direction="RT")
                         elif button.name == "UI_Conveyer_RB.png":
-                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png").convert(), direction="RB")
+                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction="RB")
                         else:
                             self.gui_sprites.isEdit = False
                 if not isGuiCollide: #컨베이어 벨트 설치
-                    newConveyer = Conveyer(pygame.Surface.copy(self.edit_system.conveyer.image), direction=self.edit_system.conveyer.direction)
-                    newConveyer.image.set_alpha(255)
+                    newConveyer = Conveyer(self.edit_system.conveyer.image,self.app,  direction=self.edit_system.conveyer.direction)
+                    newConveyer.image.alpha = 255
                     newConveyer.position = self.edit_system.conveyer.position
                     self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.direction
                     newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
                     self.visible_sprites.add(newConveyer)
-                    Ingredient([self.visible_sprites, self.ingredient_sprites], "Stone")
+                    Ingredient([self.visible_sprites, self.ingredient_sprites], "Stone", self.app)
                     
                     
 
@@ -180,24 +183,26 @@ class Level:
         self.gui_sprites.custom_draw()
 
 class SortCamera(pygame.sprite.Group):
-    def __init__(self) -> None:
+    def __init__(self, app) -> None:
         super().__init__()
-        self.display_surf = pygame.display.get_surface()
+        self.app = app
 
     def custom_draw(self, offset):
         for sprite in self.sprites():
-            self.display_surf.blit(sprite.image, (sprite.rect.left + offset[0], sprite.rect.top + offset[1]))
+            newRect = sprite.rect.copy()
+            newRect.topleft = (sprite.rect.left + offset[0], sprite.rect.top + offset[1])
+            self.app[1].blit(sprite.image, newRect)
             sprite.real_rect.topleft = (sprite.rect.left + offset[0], sprite.rect.top + offset[1])
 
 
 class MainGUI(pygame.sprite.Group):
-    def __init__(self) -> None:
+    def __init__(self, app) -> None:
         super().__init__()
         self.frames = []
         self.buttons = []
         self.texts = []
 
-        self.display_surf = pygame.display.get_surface()
+        self.app = app
 
         self.isEdit = False
 
@@ -236,13 +241,13 @@ class MainGUI(pygame.sprite.Group):
         for i in os.listdir("./gui/main_gui"):
             if i == "button":
                 for button in os.listdir("./gui/main_gui/button"):
-                    newButton = Button(pygame.image.load(f"./gui/main_gui/button/{button}").convert_alpha())
+                    newButton = Button(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/button/{button}")))
                     newButton.name = button
                     newButton.rect.topleft = self.structure[button]["position"]
                     self.buttons.append(newButton)
             elif i == "frame":
                 for frame in os.listdir(f"./gui/main_gui/{i}"):
-                    self.frames.append(Frame(pygame.image.load(f"./gui/main_gui/{i}/{frame}").convert_alpha()))
+                    self.frames.append(Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/{i}/{frame}"))))
             elif i == "text":
                 for text in os.listdir(f"./gui/main_gui/{i}"):
                     with open(f"./gui/main_gui/{i}/{text}", 'r') as text_data:
@@ -255,22 +260,24 @@ class MainGUI(pygame.sprite.Group):
 
     def custom_draw(self):
         for frame in self.frames:
-            self.display_surf.blit(frame.image, frame.rect)
+            self.app[1].blit(frame.image, frame.rect)
 
         for button in self.buttons:
-            self.display_surf.blit(button.image, button.rect)
+            self.app[1].blit(button.image, button.rect)
 
         for text in self.texts:
-            self.display_surf.blit(text.render(), text.position)
+            newRect = text.render().get_rect()
+            newRect.topleft = text.position
+            self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)
 
 class EditGUI(pygame.sprite.Group):
-    def __init__(self) -> None:
+    def __init__(self, app) -> None:
         super().__init__()
         self.frames = []
         self.buttons = []
         self.texts = []
 
-        self.display_surf = pygame.display.get_surface()
+        self.app = app
 
         BUTTON_SIZE = 97
 
@@ -301,13 +308,13 @@ class EditGUI(pygame.sprite.Group):
         for i in os.listdir("./gui/edit_gui"):
             if i == "button":
                 for button in os.listdir("./gui/edit_gui/button"):
-                    newButton = Button(pygame.image.load(f"./gui/edit_gui/button/{button}").convert_alpha())
+                    newButton = Button(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button}")))
                     newButton.name = button
                     newButton.rect.topleft = self.structure[button]["position"]
                     self.buttons.append(newButton)
             elif i == "frame":
                 for frame in os.listdir(f"./gui/edit_gui/{i}"):
-                    newFrame = Frame(pygame.image.load(f"./gui/edit_gui/{i}/{frame}").convert_alpha())
+                    newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/{i}/{frame}")))
                     newFrame.name = frame
                     newFrame.rect.topleft = self.structure[frame]["position"]
                     self.frames.append(newFrame)
@@ -323,10 +330,12 @@ class EditGUI(pygame.sprite.Group):
 
     def custom_draw(self):
         for frame in self.frames:
-            self.display_surf.blit(frame.image, frame.rect)
+            self.app[1].blit(frame.image, frame.rect)
 
         for button in self.buttons:
-            self.display_surf.blit(button.image, button.rect)
+            self.app[1].blit(button.image, button.rect)
 
         for text in self.texts:
-            self.display_surf.blit(text.render(), text.position)
+            newRect = text.render().get_rect()
+            newRect.topleft = text.position
+            self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)

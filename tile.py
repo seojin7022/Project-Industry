@@ -1,12 +1,13 @@
 import pygame
+from pygame._sdl2 import *
 from settings import *
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, groups, pos=(0, 0), surf=pygame.Surface((TILE_SIZE, TILE_SIZE)), position=(0, 0)) -> None:
+    def __init__(self, groups, surf, pos=(0, 0),  position=(0, 0)) -> None:
         super().__init__(groups)
         
         
-        self.image = surf
+        self.image = Image(surf.texture)
         self.rect = self.image.get_rect()
         self.rect.topleft = pos
         self.real_rect = self.rect.copy()

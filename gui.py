@@ -6,7 +6,7 @@ class GUI(pygame.sprite.Sprite):
         super().__init__()
         self.image = surf
         self.name = ""
-        self.rect = surf.get_bounding_rect()
+        self.rect = surf.get_rect()
         
 
 class Frame(GUI):
