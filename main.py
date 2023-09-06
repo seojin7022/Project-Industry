@@ -14,11 +14,8 @@ from level import Level
 class Game: #게임 클래스
     def __init__(self) -> None:
         pygame.init()
-        self.window = Window("Factory", WINDOW_SIZE)
-        self.window.maximize()
-        print(pygame.freetype.get_default_resolution())
+        self.window = Window("Factory", (500, 500), fullscreen_desktop=True)
         self.renderer = Renderer(self.window)
-        
         surf = pygame.Surface(WINDOW_SIZE)
         surf.fill((255,255,255))
         self.background = Texture.from_surface(self.renderer, surf)
