@@ -1,4 +1,4 @@
-import os
+import os, ctypes
 
 with open(f"./requirements.txt", 'r') as requirements:
     for requirement in requirements.readlines():
@@ -8,10 +8,15 @@ from pygame._sdl2 import *
 from settings import *
 from level import Level
 
+# user32 = ctypes.windll.user32
+# user32.SetProcessDPIAware()
+
 class Game: #게임 클래스
     def __init__(self) -> None:
         pygame.init()
-        self.window = Window("Factory", WINDOW_SIZE, fullscreen_desktop=True)
+        self.window = Window("Factory", WINDOW_SIZE)
+        self.window.maximize()
+        print(pygame.freetype.get_default_resolution())
         self.renderer = Renderer(self.window)
         
         surf = pygame.Surface(WINDOW_SIZE)
