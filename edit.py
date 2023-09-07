@@ -1,6 +1,8 @@
-import pygame
+import pygame, os, json
+from pygame._sdl2 import *
 from settings import *
 from objects import Conveyer
+from gui import *
 
 direction_list = {
     "R": "B",
@@ -45,3 +47,88 @@ class Edit:
             self.r_pressed = False
 
         self.app[1].blit(self.conveyer.image, self.conveyer.rect)
+
+class EditGUI(pygame.sprite.Group):
+    def __init__(self, app) -> None:
+        super().__init__()
+        self.frames = []
+        self.buttons = []
+        self.texts = []
+        self.scroll = Scroll((1800, 97))
+        self.scroll.rect.topleft = (50, 890)
+
+        self.app = app
+
+        BUTTON_SIZE = 97
+
+        
+
+        self.structure = {
+            "UI_Conveyer_R.png": {
+                "position": (200, 890),
+            },
+
+            "UI_Conveyer_RT.png": {
+                "position": (400, 890)
+            },
+            "UI_Conveyer_RB.png": {
+                "position": (600, 890)
+            },
+            "B_Close.png": {
+                "position": (1765, 780)
+            },
+            "B_Delete.png": {
+                "position": (1765 - BUTTON_SIZE, 780)
+            },
+            "UI_Bottom.png": {
+                "position": (50, 840)
+            },
+
+        }
+
+        self.load_guis()
+
+    def load_guis(self):
+        for i in os.listdir("./gui/edit_gui"):
+            if i == "button":
+                for button in os.listdir("./gui/edit_gui/button"):
+                    if button.endswith("_Hover.png"): continue
+                    newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button}"))))
+                    newButton.name = button
+                    if button[0] == "B":
+                        newButton.rect.topleft = self.structure[button]["position"]
+                        self.buttons.append(newButton)
+                    else:
+                        self.scroll.add_children(newButton)
+            elif i == "frame":
+                for frame in os.listdir(f"./gui/edit_gui/{i}"):
+                    newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/{i}/{frame}")))
+                    newFrame.name = frame
+                    newFrame.rect.topleft = self.structure[frame]["position"]
+                    self.frames.append(newFrame)
+            elif i == "text":
+                for text in os.listdir(f"./gui/edit_gui/{i}"):
+                    with open(f"./gui/edit_gui/{i}/{text}", 'r') as text_data:
+                        text_data = json.loads(text_data.read())
+                        font = text_data["font"]
+                        text = text_data["text"]
+                        position = text_data["position"]
+                        font_size = text_data["font-size"]
+                        self.texts.append(Text(font, int(font_size), text, (int(position.split(",")[0]), int(position.split(",")[1]))))
+
+    def custom_draw(self):
+        for frame in self.frames:
+            self.app[1].blit(frame.image, frame.rect)
+
+        for button in self.buttons:
+            self.app[1].blit(button.image, button.rect)
+
+        for text in self.texts:
+            newRect = text.render().get_rect()
+            newRect.topleft = text.position
+            self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)
+
+        self.scroll.custom_draw()
+
+        for child in self.scroll.children:
+            self.app[1].blit(child.image, child.rect)

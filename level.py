@@ -4,8 +4,9 @@ from settings import *
 from tile import Tile
 from pytmx.util_pygame_sdl2 import load_pygame_sdl2
 from gui import Button, Frame, Text
-from edit import Edit
+from edit import Edit, EditGUI
 from objects import Conveyer, Ingredient
+from gamemath import *
 
 class Level:
     def __init__(self, app) -> None:
@@ -19,6 +20,8 @@ class Level:
         self.gui_sprites = MainGUI(app)
         self.edit_gui_sprites = EditGUI(app)
         self.ingredient_sprites = SortCamera(app)
+
+
 
         self.prior_mouse_pos = pygame.mouse.get_pos()
         self.mouse_pos = pygame.mouse.get_pos()
@@ -49,10 +52,13 @@ class Level:
         mouse = pygame.mouse.get_pressed()
         
         
-        def clamp(x, y):
-            return max(min(x, y), -x)
         
-        if (mouse[2]):
+        
+        isGuiCollide = False
+
+        isGuiCollide = self.edit_gui_sprites.scroll.drag(mouse)
+        
+        if (mouse[2] and not isGuiCollide):
             current_mouse_pos = pygame.mouse.get_pos()
             if current_mouse_pos != self.mouse_pos:
                 self.offset = (self.offset[0] + clamp(50, (current_mouse_pos[0] - self.prior_mouse_pos[0]) * 0.1),self.offset[1] + clamp(50, (current_mouse_pos[1] - self.prior_mouse_pos[1]) * 0.1))
@@ -231,7 +237,9 @@ class MainGUI(pygame.sprite.Group):
 
             "UI_Store.png": {
                 "position": (10, BUTTON_SIZE * 6)
-            }
+            },
+
+            
 
         }
 
@@ -270,72 +278,3 @@ class MainGUI(pygame.sprite.Group):
             newRect.topleft = text.position
             self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)
 
-class EditGUI(pygame.sprite.Group):
-    def __init__(self, app) -> None:
-        super().__init__()
-        self.frames = []
-        self.buttons = []
-        self.texts = []
-
-        self.app = app
-
-        BUTTON_SIZE = 97
-
-        self.structure = {
-            "UI_Conveyer_R.png": {
-                "position": (200, 890)
-            },
-
-            "UI_Conveyer_RT.png": {
-                "position": (400, 890)
-            },
-            "UI_Conveyer_RB.png": {
-                "position": (600, 890)
-            },
-            "UI_Close.png": {
-                "position": (1765, 780)
-            },
-
-            "UI_Bottom.png": {
-                "position": (50, 865)
-            },
-
-        }
-
-        self.load_guis()
-
-    def load_guis(self):
-        for i in os.listdir("./gui/edit_gui"):
-            if i == "button":
-                for button in os.listdir("./gui/edit_gui/button"):
-                    newButton = Button(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button}")))
-                    newButton.name = button
-                    newButton.rect.topleft = self.structure[button]["position"]
-                    self.buttons.append(newButton)
-            elif i == "frame":
-                for frame in os.listdir(f"./gui/edit_gui/{i}"):
-                    newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/{i}/{frame}")))
-                    newFrame.name = frame
-                    newFrame.rect.topleft = self.structure[frame]["position"]
-                    self.frames.append(newFrame)
-            elif i == "text":
-                for text in os.listdir(f"./gui/edit_gui/{i}"):
-                    with open(f"./gui/edit_gui/{i}/{text}", 'r') as text_data:
-                        text_data = json.loads(text_data.read())
-                        font = text_data["font"]
-                        text = text_data["text"]
-                        position = text_data["position"]
-                        font_size = text_data["font-size"]
-                        self.texts.append(Text(font, int(font_size), text, (int(position.split(",")[0]), int(position.split(",")[1]))))
-
-    def custom_draw(self):
-        for frame in self.frames:
-            self.app[1].blit(frame.image, frame.rect)
-
-        for button in self.buttons:
-            self.app[1].blit(button.image, button.rect)
-
-        for text in self.texts:
-            newRect = text.render().get_rect()
-            newRect.topleft = text.position
-            self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)
