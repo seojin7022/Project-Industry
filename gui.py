@@ -32,7 +32,7 @@ class Button(GUI):
         if type(self.hover_image) == Image:
             if not self.animation.properties.get("Alpha") and not self.hovering:
                 self.hovering = True
-                self.animation.add_property("Alpha", 255, 200, self.hover_image.alpha)
+                self.animation.add_property("Alpha", 255, 150, self.hover_image.alpha)
                 animation_sprites.add(self)
             self.hover_image_rect.topleft = self.rect.topleft
             renderer.blit(self.hover_image, self.hover_image_rect)
@@ -41,20 +41,25 @@ class Button(GUI):
         if type(self.hover_image) == Image:
             if not self.animation.properties.get("Alpha") and self.hovering:
                 self.hovering = False
-                self.animation.add_property("Alpha", 0, 200, self.hover_image.alpha)
+                self.animation.add_property("Alpha", 0, 150, self.hover_image.alpha)
                 animation_sprites.add(self)
             self.hover_image_rect.topleft = self.rect.topleft
             renderer.blit(self.hover_image, self.hover_image_rect)
 class Text():
-    def __init__(self, font, font_size, text, position) -> None:
+    def __init__(self, app, font, font_size, text, position) -> None:
         self.font_size = font_size
-        self.text = text
+        self.text: str = text
         self.position = position
+        self.app = app
 
         self.font = pygame.font.Font(f"./font/{font}", font_size)
     
     def render(self):
-        return self.font.render(self.text, True, (0, 0, 0))
+        text = self.text
+        if "%Money%" in text:
+            text = text.replace("%Money%", str(self.app[2]["Money"]))
+
+        return self.font.render(text, True, (0, 0, 0))
     
 class Scroll(GUI):
     def __init__(self, size, direction="h") -> None:

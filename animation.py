@@ -15,7 +15,7 @@ class Animation:
         self.property_time.update({f"{property}": time})
         self.property_start_time.update({f"{property}": pygame.time.get_ticks()})
     def play(self):
-        print("플레이")
+        
         for property, value in self.properties.items():
             
             if self.property_alpha[property] >= 1:

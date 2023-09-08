@@ -1,8 +1,10 @@
-import os, ctypes
+import os, ctypes, json
 
 with open(f"./requirements.txt", 'r') as requirements:
     for requirement in requirements.readlines():
-       os.system(f"pip install {requirement}") 
+       os.system(f"pip install {requirement}")
+
+import init
 import pygame, sys
 from pygame._sdl2 import *
 from settings import *
@@ -24,7 +26,7 @@ class Game: #게임 클래스
         self.background = Texture.from_surface(self.renderer, surf)
         
 
-        self.level = Level([self.window, self.renderer])
+        self.level = Level([self.window, self.renderer, init.data, init.isFirstStarter])
 
         self.clock = pygame.time.Clock()
         
@@ -33,6 +35,8 @@ class Game: #게임 클래스
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    with open("./data/player-data.txt", 'w') as PlayerData:
+                        PlayerData.write(json.dumps(init.data))
                     pygame.quit()
                     sys.exit()
 
