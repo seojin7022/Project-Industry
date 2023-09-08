@@ -1,13 +1,12 @@
 import pygame
 from pygame._sdl2 import *
 from settings import *
-
+from animation import *
 
 
 class Conveyer(pygame.sprite.Sprite):
     def __init__(self, surf,app, direction="R") -> None:
         super().__init__()
-        
         
         self.direction = direction
         self.position = (0, 0)

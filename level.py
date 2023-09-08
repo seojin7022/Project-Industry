@@ -7,6 +7,7 @@ from gui import Button, Frame, Text
 from edit import Edit, EditGUI
 from objects import Conveyer, Ingredient
 from gamemath import *
+from animation import *
 
 class Level:
     def __init__(self, app) -> None:
@@ -20,7 +21,7 @@ class Level:
         self.gui_sprites = MainGUI(app)
         self.edit_gui_sprites = EditGUI(app)
         self.ingredient_sprites = SortCamera(app)
-
+        self.animation_sprites = AnimationController()
 
 
         self.prior_mouse_pos = pygame.mouse.get_pos()
@@ -54,14 +55,14 @@ class Level:
         
         
         
-        isGuiCollide = False
+        self.isGuiCollide = False
 
-        isGuiCollide = self.edit_gui_sprites.scroll.drag(mouse)
+        self.isGuiCollide = self.edit_gui_sprites.scroll.drag(mouse)
         
-        if (mouse[2] and not isGuiCollide):
+        if (mouse[2] and not self.isGuiCollide):
             current_mouse_pos = pygame.mouse.get_pos()
             if current_mouse_pos != self.mouse_pos:
-                self.offset = (self.offset[0] + clamp(50, (current_mouse_pos[0] - self.prior_mouse_pos[0]) * 0.1),self.offset[1] + clamp(50, (current_mouse_pos[1] - self.prior_mouse_pos[1]) * 0.1))
+                self.offset = (self.offset[0] + int(clamp(50, (current_mouse_pos[0] - self.prior_mouse_pos[0]) * 0.1)),self.offset[1] + int(clamp(50, (current_mouse_pos[1] - self.prior_mouse_pos[1]) * 0.1)))
                 self.offset = (max(min(TILE_SIZE * 3, self.offset[0]), TILE_SIZE * -18), max(min(TILE_SIZE * 3, self.offset[1]), TILE_SIZE * -24))
             else:
                 self.prior_mouse_pos = current_mouse_pos
@@ -78,32 +79,35 @@ class Level:
 
         if (mouse[0] and not self.mouse_pressed):
             self.mouse_pressed = True
-            isGuiCollide = False
             for button in self.gui_sprites.buttons:
                 button:Button
                 if button.rect.collidepoint(pygame.mouse.get_pos()):
-                    isGuiCollide = True
-                    if button.name == "UI_E.png" and not self.gui_sprites.isEdit:
+                    self.isGuiCollide = True
+                    if button.name == "B_Edit.png" and not self.gui_sprites.isEdit:
                         self.gui_sprites.isEdit = True
                         self.edit_system.run(self.floor_sprites, self.offset)
-                    elif button.name == "UI_E.png" and self.gui_sprites.isEdit:
+                    elif button.name == "B_Edit.png" and self.gui_sprites.isEdit:
                         self.gui_sprites.isEdit = False
             
             if self.gui_sprites.isEdit:
                 for button in self.edit_gui_sprites.buttons:
                     button:Button
                     if button.rect.collidepoint(pygame.mouse.get_pos()):
-                        isGuiCollide = True
-                        if button.name == "UI_Conveyer_R.png":
+                        self.isGuiCollide = True
+                        if button.name == "UI_Edit_CVB_R.png":
                             
                             self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png"),self.app, direction="R")
-                        elif button.name == "UI_Conveyer_RT.png":
+                        elif button.name == "UI_Edit_CVB_RT.png":
                             self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-2.png"),self.app, direction="RT")
-                        elif button.name == "UI_Conveyer_RB.png":
+                        elif button.name == "UI_Edit_CVB_RB.png":
                             self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction="RB")
+                        elif button.name == "B_Delete.png":
+                            pass
                         else:
                             self.gui_sprites.isEdit = False
-                if not isGuiCollide: #컨베이어 벨트 설치
+                            for button in self.edit_gui_sprites.buttons:
+                                button.hover_out(self.app[1], self.animation_sprites)
+                if not self.isGuiCollide: #컨베이어 벨트 설치
                     newConveyer = Conveyer(self.edit_system.conveyer.image,self.app,  direction=self.edit_system.conveyer.direction)
                     newConveyer.image.alpha = 255
                     newConveyer.position = self.edit_system.conveyer.position
@@ -116,6 +120,24 @@ class Level:
 
         elif (mouse[0] == 0):
             self.mouse_pressed = False
+
+    def hover(self):
+        mouse = pygame.mouse.get_pos()
+
+        for button in self.gui_sprites.buttons:
+            button: Button
+            if button.rect.collidepoint(mouse):
+                button.hover(self.app[1], self.animation_sprites)
+            else:
+                button.hover_out(self.app[1], self.animation_sprites)
+
+        if self.gui_sprites.isEdit:
+            for button in self.edit_gui_sprites.buttons:
+                button: Button
+                if button.rect.collidepoint(mouse):
+                    button.hover(self.app[1], self.animation_sprites)
+                else:
+                    button.hover_out(self.app[1], self.animation_sprites)
 
     def Edit(self):
         self.edit_system.run(self.floor_sprites, self.offset)
@@ -177,16 +199,20 @@ class Level:
 
 
     def run(self):
+        self.isGuiCollide = False
         self.drag()
         self.click_button()
+        self.animation_sprites.update()
         self.visible_sprites.update()
         self.visible_sprites.custom_draw(self.offset)
         self.convey()
         self.ingredient_sprites.custom_draw(self.offset)
+        
         if self.gui_sprites.isEdit:
             self.Edit()
             self.edit_gui_sprites.custom_draw()
         self.gui_sprites.custom_draw()
+        self.hover()
 
 class SortCamera(pygame.sprite.Group):
     def __init__(self, app) -> None:
@@ -215,27 +241,27 @@ class MainGUI(pygame.sprite.Group):
         BUTTON_SIZE = 97
 
         self.structure = {
-            "UI_Bank.png": {
+            "B_Info.png": {
                 "position": (10, BUTTON_SIZE * 2),
             },
 
-            "UI_E.png": {
+            "B_Edit.png": {
                 "position": (10, BUTTON_SIZE * 3),
             },
 
-            "UI_Finance.png": {
+            "B_Bank.png": {
                 "position": (10, BUTTON_SIZE * 4),
             },
 
-            "UI_Info.png": {
+            "B_Shop.png": {
                 "position": (10, BUTTON_SIZE * 5),
             },
 
-            "UI_Menu.png": {
+            "B_Menu.png": {
                 "position": (1920 - BUTTON_SIZE, 7),
             },
 
-            "UI_Store.png": {
+            "B_Stock.png": {
                 "position": (10, BUTTON_SIZE * 6)
             },
 
@@ -249,7 +275,14 @@ class MainGUI(pygame.sprite.Group):
         for i in os.listdir("./gui/main_gui"):
             if i == "button":
                 for button in os.listdir("./gui/main_gui/button"):
-                    newButton = Button(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/button/{button}")))
+                    if button.endswith("_Hover.png"): continue
+                    hover_img = None
+                    
+                    if os.path.exists(f"./gui/main_gui/button/{button.split('.')[0] + '_Hover.png'}"):
+                        
+                        hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/button/{button.split('.')[0] + '_Hover.png'}")))
+                        
+                    newButton = Button(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/button/{button}")), hover_img)
                     newButton.name = button
                     newButton.rect.topleft = self.structure[button]["position"]
                     self.buttons.append(newButton)

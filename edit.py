@@ -55,7 +55,7 @@ class EditGUI(pygame.sprite.Group):
         self.buttons = []
         self.texts = []
         self.scroll = Scroll((1800, 97))
-        self.scroll.rect.topleft = (50, 890)
+        self.scroll.rect.topleft = (50, 900)
 
         self.app = app
 
@@ -93,13 +93,20 @@ class EditGUI(pygame.sprite.Group):
             if i == "button":
                 for button in os.listdir("./gui/edit_gui/button"):
                     if button.endswith("_Hover.png"): continue
-                    newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button}"))))
+                    hover_img = None
+                    
+                    if os.path.exists(f"./gui/edit_gui/button/{button.split('.')[0] + '_Hover.png'}"):
+                        
+                        hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button.split('.')[0] + '_Hover.png'}")))
+                        
+                    newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button}"))), hover_img)
                     newButton.name = button
                     if button[0] == "B":
                         newButton.rect.topleft = self.structure[button]["position"]
                         self.buttons.append(newButton)
                     else:
                         self.scroll.add_children(newButton)
+                        self.buttons.append(newButton)
             elif i == "frame":
                 for frame in os.listdir(f"./gui/edit_gui/{i}"):
                     newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/{i}/{frame}")))
