@@ -270,7 +270,7 @@ class Level:
                 continue
             elif direction == "E":
                 ingredient.kill()
-                self.app[2]["Money"] += 100
+                self.app[2]["Money"] += ingredient.money
                 continue
             
             if len(direction) == 2:
