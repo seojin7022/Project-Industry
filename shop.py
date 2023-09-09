@@ -3,6 +3,10 @@ from pygame._sdl2 import *
 from settings import *
 from gui import *
 
+shop_items = {
+    "Peel_Machine": 1000
+}
+
 
 class Shop:
     def __init__(self, app) -> None:
@@ -19,6 +23,9 @@ class ShopGUI(pygame.sprite.Group):
         self.frames = []
         self.buttons = []
         self.texts = []
+
+        self.scroll = Scroll((1000, 650), direction="v")
+        self.scroll.rect.center = (WINDOW_SIZE[0] / 2, WINDOW_SIZE[1] / 2 + 100)
 
         self.app = app
 
@@ -60,17 +67,14 @@ class ShopGUI(pygame.sprite.Group):
                     newFrame.name = frame
                     newFrame.rect.center = self.structure[frame]["position"]
                     self.frames.append(newFrame)
-            elif i == "text":
-                for text in os.listdir(f"./gui/{self.name}/{i}"):
-                    with open(f"./gui/{self.name}/{i}/{text}", 'r') as text_data:
-                        text_data = json.loads(text_data.read())
-                        font = text_data["font"]
-                        text = text_data["text"]
-                        position = text_data["position"]
-                        font_size = text_data["font-size"]
-                        self.texts.append(Text(font, int(font_size), text, (int(position.split(",")[0]), int(position.split(",")[1]))))
-
+        for button in os.listdir("./gui/edit_gui/button"):
+            if "Machine" in button:
+                newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button}"))), None)
+                newButton.name = button.split(".")[0]
+                self.scroll.add_children(newButton)
+                self.buttons.append(newButton)
     def custom_draw(self):
+        self.scroll.custom_draw()
         for frame in self.frames:
             self.app[1].blit(frame.image, frame.rect)
 

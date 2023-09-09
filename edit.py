@@ -73,7 +73,7 @@ class EditGUI(pygame.sprite.Group):
         self.buttons = []
         self.texts = []
         self.scroll = Scroll((1700, 97))
-        self.scroll.rect.center = (WINDOW_SIZE[0] / 2, 950)
+        self.scroll.rect.center = (WINDOW_SIZE[0] / 2, 920)
 
         self.app = app
 
@@ -123,6 +123,14 @@ class EditGUI(pygame.sprite.Group):
                         newButton.rect.topleft = self.structure[button]["position"]
                         self.buttons.append(newButton)
                     else:
+                        if "Machine" in button:
+                            if not self.app[2]["Machines"].get(button.split(".")[0]):
+                                del newButton
+                                continue
+                            else:
+                                if self.app[2]["Machines"][button.split(".")[0]] == 0:
+                                    del newButton
+                                    continue
                         self.scroll.add_children(newButton)
                         self.buttons.append(newButton)
             elif i == "frame":

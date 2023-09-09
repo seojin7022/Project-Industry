@@ -65,18 +65,21 @@ class Text():
         return self.font.render(text, True, self.color)
     
 class Scroll(GUI):
-    def __init__(self, size, direction="h") -> None:
+    def __init__(self, size, direction="h", max_count = 1) -> None:
         super().__init__(pygame.Surface(size))
         self.children = []
-        self.offset = [-50, 1]
+        self.offset = [0, 0]
         self.direction = direction
-        self.margin = (20, 5)
+        self.max_count = 4
+        self.margin = (20, 20)
         self.prior_mouse_pos = pygame.mouse.get_pos()
     
     def add_children(self, child):
         self.children.append(child)
         child.rect.topleft = self.rect.topleft
-        child.rect.centery = self.rect.centery
+        # if self.direction == "h":
+        #     child.rect.centery = self.rect.centery
+        
 
     def drag(self, mouse):
         
@@ -94,6 +97,11 @@ class Scroll(GUI):
 
                     self.offset[0] = max(min(0, self.offset[0]), -500)
 
+                elif self.direction == "v":
+                    self.offset[1] += clamp(50, (current_mouse_pos[1] - self.prior_mouse_pos[1])) * 0.2
+
+                    self.offset[1] = max(min(0, self.offset[1]), -(int(len(self.children) / self.max_count)) * self.children[0].rect.height)
+
         if mouse[0] == 0:
             self.prior_mouse_pos = pygame.mouse.get_pos()
         
@@ -102,13 +110,23 @@ class Scroll(GUI):
     def custom_draw(self):
         for child in self.children:
             child.rect.left = self.rect.left + self.offset[0] + (child.origin_rect.width + self.margin[0]) * (self.children.index(child))
+            if self.direction == "v":
+                child.rect.top = self.rect.top + self.offset[1] + (child.origin_rect.height + self.margin[1]) * int(self.children.index(child) / self.max_count)
             child.image.srcrect.width = child.origin_rect.width
+            child.image.srcrect.height = child.origin_rect.height
             child.image.srcrect.left = 0
+            child.image.srcrect.top = 0
             child.rect.width = child.image.srcrect.width
+            child.rect.height = child.image.srcrect.height
             if child.rect.left < self.rect.left:
                 child.image.srcrect.width = min(max((child.origin_rect.width - (self.rect.left - child.rect.left)), 0), child.origin_rect.width)
                 child.rect.width = child.image.srcrect.width
                 child.image.srcrect.left = (child.origin_rect.width - child.rect.width)
-                print(child.image.srcrect.right)
                 child.rect.left = self.rect.left
+
+            if child.rect.top < self.rect.top:
+                child.image.srcrect.height = min(max((child.origin_rect.height - (self.rect.top - child.rect.top)), 0), child.origin_rect.height)
+                child.rect.height = child.image.srcrect.height
+                child.image.srcrect.top = (child.origin_rect.height - child.rect.height)
+                child.rect.top = self.rect.top
                 

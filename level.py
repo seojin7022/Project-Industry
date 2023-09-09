@@ -10,7 +10,7 @@ from gamemath import *
 from animation import *
 from info import *
 from shop import *
-
+from contract import *
 
 
 class Level:
@@ -30,6 +30,7 @@ class Level:
         self.info_gui_sprites = InfoGUI(app)
         self.machine_sprites = SortCamera(app)
         self.shop_gui_sprites = ShopGUI(app)
+        self.contract_gui_sprites = ContractGUI(app)
         
 
         #Mouse Control Values
@@ -50,6 +51,7 @@ class Level:
         self.info_system = Info(self.app)
         self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png"), self.app), self.app)
         self.shop_system = Shop(app)
+        self.contract_system = Contract(app)
 
         self.last_produce_time = pygame.time.get_ticks()
 
@@ -58,7 +60,8 @@ class Level:
         self.modes = {
             "Edit": [self.edit_gui_sprites, self.edit_system],
             "Info": [self.info_gui_sprites, self.info_system],
-            "Shop": [self.shop_gui_sprites, self.shop_system]
+            "Shop": [self.shop_gui_sprites, self.shop_system],
+            "Contract": [self.contract_gui_sprites, self.contract_system],
         }
 
         self.create_map()
@@ -115,7 +118,10 @@ class Level:
         mouse = pygame.mouse.get_pressed()
         self.isGuiCollide = False
 
-        self.isGuiCollide = self.edit_gui_sprites.scroll.drag(mouse)
+        if self.mode != "None":
+            if hasattr(self.modes[self.mode][0], "scroll"):
+                self.isGuiCollide = self.modes[self.mode][0].scroll.drag(mouse)
+                
         
         if (mouse[2] and not self.isGuiCollide):
             current_mouse_pos = pygame.mouse.get_pos()
@@ -150,6 +156,9 @@ class Level:
                     elif button.name == "B_Shop.png" and self.mode != "Shop":
                         self.mode = "Shop"
                         self.shop_system.run()
+                    elif button.name == "B_Contract.png" and self.mode != "Contract":
+                        self.mode = "Contract"
+                        self.contract_system.run()
             
             if self.mode == "Edit":
                 for button in self.edit_gui_sprites.buttons:
@@ -406,15 +415,15 @@ class MainGUI(pygame.sprite.Group):
                 "position": (10, BUTTON_SIZE * 2),
             },
 
-            "B_Edit.png": {
+            "B_Bank.png": {
                 "position": (10, BUTTON_SIZE * 3),
             },
 
-            "B_Bank.png": {
+            "B_Shop.png": {
                 "position": (10, BUTTON_SIZE * 4),
             },
 
-            "B_Shop.png": {
+            "B_Stock.png": {
                 "position": (10, BUTTON_SIZE * 5),
             },
 
@@ -422,9 +431,13 @@ class MainGUI(pygame.sprite.Group):
                 "position": (1920 - BUTTON_SIZE, 7),
             },
 
-            "B_Stock.png": {
+            "B_Edit.png": {
                 "position": (10, BUTTON_SIZE * 6)
             },
+
+            "B_Contract.png": {
+                "position": (10, BUTTON_SIZE * 7)
+            }
 
             
 

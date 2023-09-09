@@ -22,7 +22,7 @@ datas = {
     "Money": 0,
     "Map": [["0" for i in range(MAP_SIZE[0])] for j in range(MAP_SIZE[1])],
     "MachineMap": [["0" for i in range(MAP_SIZE[0])] for j in range(MAP_SIZE[1])],
-
+    "Machines": {}
 }
 
 data = {}
