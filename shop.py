@@ -1,11 +1,10 @@
 import pygame, os, json
 from pygame._sdl2 import *
 from settings import *
-from objects import Conveyer
 from gui import *
 
 
-class Info:
+class Shop:
     def __init__(self, app) -> None:
         self.app = app
         
@@ -13,10 +12,10 @@ class Info:
     def run(self):
         pass
 
-class InfoGUI(pygame.sprite.Group):
+class ShopGUI(pygame.sprite.Group):
     def __init__(self, app) -> None:
         super().__init__()
-        self.name = "info_gui"
+        self.name = "shop_gui"
         self.frames = []
         self.buttons = []
         self.texts = []
@@ -24,12 +23,16 @@ class InfoGUI(pygame.sprite.Group):
         self.app = app
 
         self.structure = {
-            "UI_Info.png": {
+            "UI_Shop.png": {
                 "position": (WINDOW_SIZE[0] / 2, WINDOW_SIZE[1] / 2),
             },
 
-            "B_Close.png": {
-                "position": (WINDOW_SIZE[0] / 2 + 390, WINDOW_SIZE[1] / 2 - 150)
+            "B_Cancel.png": {
+                "position": (WINDOW_SIZE[0] / 2 + 350, WINDOW_SIZE[1] / 2 + 360)
+            },
+
+            "B_Purchase.png": {
+                "position": (WINDOW_SIZE[0] / 2 + 590, WINDOW_SIZE[1] / 2 + 360)
             }
 
         }

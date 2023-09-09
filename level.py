@@ -5,10 +5,11 @@ from tile import Tile
 from pytmx.util_pygame_sdl2 import load_pygame_sdl2
 from gui import Button, Frame, Text
 from edit import *
-from objects import Conveyer, Ingredient
+from objects import *
 from gamemath import *
 from animation import *
 from info import *
+from shop import *
 
 
 
@@ -27,6 +28,9 @@ class Level:
         self.ingredient_sprites = SortCamera(app)
         self.animation_sprites = AnimationController()
         self.info_gui_sprites = InfoGUI(app)
+        self.machine_sprites = SortCamera(app)
+        self.shop_gui_sprites = ShopGUI(app)
+        
 
         #Mouse Control Values
         self.prior_mouse_pos = pygame.mouse.get_pos()
@@ -35,7 +39,8 @@ class Level:
         self.mouse_pressed = False
 
         #Map
-        self.map = [["0" for i in range(MAP_SIZE[0])] for j in range(MAP_SIZE[1])]
+        self.map = self.app[2]["Map"]
+        self.machine_map = self.app[2]["MachineMap"]
         self.map[0][0] = "S"
         self.map[5][5] = "E"
         self.startpoint = (0, 0)
@@ -44,6 +49,7 @@ class Level:
         #System
         self.info_system = Info(self.app)
         self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png"), self.app), self.app)
+        self.shop_system = Shop(app)
 
         self.last_produce_time = pygame.time.get_ticks()
 
@@ -51,7 +57,8 @@ class Level:
 
         self.modes = {
             "Edit": [self.edit_gui_sprites, self.edit_system],
-            "Info": [self.info_gui_sprites, self.info_system]
+            "Info": [self.info_gui_sprites, self.info_system],
+            "Shop": [self.shop_gui_sprites, self.shop_system]
         }
 
         self.create_map()
@@ -65,6 +72,44 @@ class Level:
                 if layer.name == "Floor":
                     for x, y, surf in layer.tiles():
                         Tile([self.visible_sprites, self.floor_sprites], surf, (x * TILE_SIZE, y * TILE_SIZE), (x, y))
+
+        for i in range(MAP_SIZE[1]):
+            for j in range(MAP_SIZE[0]):
+                if self.map[i][j] == "S":
+                    newConveyer = Conveyer(pygame.image.load("./img/Tiles/Container.png"),self.app)
+                    newConveyer.position = (i, j)
+                    newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                    self.visible_sprites.add(newConveyer)
+                elif self.map[i][j] == "E":
+                    newConveyer = Conveyer(pygame.image.load("./img/Tiles/T_Out.png"),self.app)
+                    newConveyer.position = (i, j)
+                    newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                    self.visible_sprites.add(newConveyer)
+                elif self.map[i][j] != "0" and len(self.map[i][j]) == 1:
+                    newConveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png"),self.app, direction=self.map[i][j])
+                    newConveyer.image.angle = 90 * get_direction(self.map[i][j], 0)
+                    newConveyer.position = (i, j)
+                    newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                    self.visible_sprites.add(newConveyer)
+                elif self.map[i][j] in ["RT", "BR", "LB", "TL"]:
+                    newConveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-2.png"),self.app, direction=self.map[i][j])
+                    newConveyer.image.angle = 90 * get_direction(self.map[i][j], 0)
+                    newConveyer.position = (i, j)
+                    newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                    self.visible_sprites.add(newConveyer)
+                elif self.map[i][j] in ["RB", "BL", "LT", "TR"]:
+                    newConveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction=self.map[i][j])
+                    newConveyer.image.angle = 90 * get_direction(self.map[i][j], 0)
+                    newConveyer.position = (i, j)
+                    newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                    self.visible_sprites.add(newConveyer)
+        for i in range(MAP_SIZE[1]):
+            for j in range(MAP_SIZE[0]):
+                if self.machine_map[i][j] != "0":
+                    newMachine = Machine(pygame.image.load(f"./img/Tiles/{self.machine_map[i][j]}.png"), self.app, name=self.machine_map[i][j])
+                    newMachine.position = (i, j)
+                    newMachine.rect.topleft = (newMachine.position[0] * TILE_SIZE, newMachine.position[1] * TILE_SIZE)
+                    self.machine_sprites.add(newMachine)
 
     def drag(self):
         mouse = pygame.mouse.get_pressed()
@@ -102,6 +147,9 @@ class Level:
                     elif button.name == "B_Info.png" and self.mode != "Info":
                         self.mode = "Info"
                         self.info_system.run()
+                    elif button.name == "B_Shop.png" and self.mode != "Shop":
+                        self.mode = "Shop"
+                        self.shop_system.run()
             
             if self.mode == "Edit":
                 for button in self.edit_gui_sprites.buttons:
@@ -117,35 +165,67 @@ class Level:
                             self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-2.png"),self.app, direction="RT")
                         elif button.name == "UI_Edit_CVB_RB.png":
                             self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction="RB")
+                        elif button.name == "UI_Edit_Peel_Machine.png":
+                            self.edit_system.conveyer = Machine(pygame.image.load(f"./img/Tiles/{button.name.replace('UI_Edit_', '')}"),self.app, name=button.name.replace('UI_Edit_', '').split(".")[0])
+                            print(self.edit_system.conveyer.name)
                         elif button.name == "B_Delete.png":
                             if self.edit_system.delete_mode:
                                 self.edit_system.delete_mode = False
                                 self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png"),self.app, direction="R")
                             else:
                                 self.edit_system.delete_mode = True
-                                self.edit_system.conveyer = None
+                                self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/UI_Delete.png"),self.app, direction="R")
                         else:
                             self.mode = "None"
+                            self.edit_system.delete_mode = False
                             for button in self.edit_gui_sprites.buttons:
                                 button.hover_out(self.app[1], self.animation_sprites)
+                
                 if not self.isGuiCollide: #컨베이어 벨트 설치
                     if self.edit_system.delete_mode:
+
+                        if self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] != "0":
+                            self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] = "0"
+
+                            for sprite in self.machine_sprites.sprites():
+                                if type(sprite) == Machine:
+                                    if sprite.position == self.edit_system.delete_pos:
+                                        sprite.kill()
+                        else:
                         
-                        self.map[self.edit_system.delete_pos[0]][ self.edit_system.delete_pos[1]] = "0"
-                        for sprite in self.visible_sprites.sprites():
-                            if type(sprite) == Conveyer:
-                                if sprite.position == self.edit_system.delete_pos:
-                                    sprite.kill()
-                        self.visible_sprites.remove()
+                            self.map[self.edit_system.delete_pos[0]][ self.edit_system.delete_pos[1]] = "0"
+                            for sprite in self.visible_sprites.sprites():
+                                if type(sprite) == Conveyer:
+                                    if sprite.position == self.edit_system.delete_pos:
+                                        sprite.kill()
                     else:
-                        newConveyer = Conveyer(self.edit_system.conveyer.image,self.app,  direction=self.edit_system.conveyer.direction)
-                        newConveyer.image.alpha = 255
-                        newConveyer.position = self.edit_system.conveyer.position
-                        self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.direction
-                        newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
-                        self.visible_sprites.add(newConveyer)
-                    
-                    
+                        if type(self.edit_system.conveyer) == Machine:
+                            if not self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] in ["0","E", "S"]:
+                                newMachine = Machine(self.edit_system.conveyer.image, self.app, name=self.edit_system.conveyer.name)
+                                newMachine.image.alpha = 255
+                                newMachine.position = self.edit_system.conveyer.position
+                                self.machine_map[newMachine.position[0]][newMachine.position[1]] = newMachine.name
+                                newMachine.rect.topleft = (newMachine.position[0] * TILE_SIZE, newMachine.position[1] * TILE_SIZE)
+                                self.machine_sprites.add(newMachine)
+                        else:
+                            if self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] == "0":
+                                newConveyer = Conveyer(self.edit_system.conveyer.image,self.app,  direction=self.edit_system.conveyer.direction)
+                                newConveyer.image.alpha = 255
+                                newConveyer.position = self.edit_system.conveyer.position
+                                self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.direction
+                                newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                                self.visible_sprites.add(newConveyer)
+            if self.mode == "Info":
+                for button in self.info_gui_sprites.buttons:
+                    button:Button
+                    if button.rect.collidepoint(pygame.mouse.get_pos()):
+                        self.isGuiCollide = True
+                        if button.name == "B_Close.png":
+                            self.mode = "None"
+                            button.hover_out(self.app[1], self.animation_sprites)
+            
+
+                        
 
         elif (mouse[0] == 0):
             self.mouse_pressed = False
@@ -177,7 +257,7 @@ class Level:
             if self.startpoint[0] < MAP_SIZE[0] - 1:
                 
                 if not (self.map[self.startpoint[0] + 1][self.startpoint[1]] in ["0", "E"]):
-                    Ingredient(self.ingredient_sprites, "Stone", self.app, position=(self.startpoint[0] + 1, self.startpoint[1]))
+                    Ingredient(self.ingredient_sprites, "Oak", self.app, position=(self.startpoint[0] + 1, self.startpoint[1]))
                     self.last_produce_time = pygame.time.get_ticks()
 
     def convey(self):
@@ -197,48 +277,59 @@ class Level:
                 direction = direction[0]
 
                 if direction == "R":
-                    if ingredient.rect.left + 1 >= (ingredient.position[0]) *TILE_SIZE + (TILE_SIZE / 4):
+                    if ingredient.rect.centerx + 1 >= (ingredient.position[0]) *TILE_SIZE + (TILE_SIZE / 2):
                         
                         direction = self.map[ingredient.position[0]][ingredient.position[1]][1]
                 elif direction == "L":
-                    if ingredient.rect.left - 1 <= (ingredient.position[0]) *TILE_SIZE + (TILE_SIZE / 4):
+                    if ingredient.rect.centerx - 1 <= (ingredient.position[0]) *TILE_SIZE + (TILE_SIZE / 2):
                         direction = self.map[ingredient.position[0]][ingredient.position[1]][1]
                 elif direction == "T":
-                    if ingredient.rect.top - 1 <= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 4):
+                    if ingredient.rect.centery - 1 <= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 2):
                         direction = self.map[ingredient.position[0]][ingredient.position[1]][1]
                 elif direction == "B":
-                    if ingredient.rect.top + 1 >= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 4):
+                    if ingredient.rect.centery + 1 >= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 2):
                         direction = self.map[ingredient.position[0]][ingredient.position[1]][1]
             
+            if self.machine_map[ingredient.position[0]][ingredient.position[1]] != "0":
+                ingredient.manufacture(machine_count[self.machine_map[ingredient.position[0]][ingredient.position[1]]])
 
             if direction == "R": #오른쪽으로 갈때
                 ingredient.rect.left += 1
-                if ingredient.rect.centerx >= (ingredient.position[0] + 1) *TILE_SIZE + (TILE_SIZE / 2):
+                if ingredient.rect.centerx >= (ingredient.position[0]) *TILE_SIZE + (TILE_SIZE / 2):
                     newDirection = self.map[ingredient.position[0] + 1][ingredient.position[1]][0]
                     if newDirection == direction or newDirection == "0" or newDirection == "E":
                         ingredient.position = (ingredient.position[0] + 1, ingredient.position[1])
+                    else:
+                        ingredient.kill()
+
+                    
                     
             elif direction == "L": #왼쪽으로 갈때
                 ingredient.rect.left -= 1
-                if ingredient.rect.centerx <= (ingredient.position[0] + 1) *TILE_SIZE + (TILE_SIZE / 2):
+                if ingredient.rect.centerx <= (ingredient.position[0]) *TILE_SIZE + (TILE_SIZE / 2):
                     newDirection = self.map[ingredient.position[0] - 1][ingredient.position[1]][0]
+                    
                     if newDirection == direction or newDirection == "0" or newDirection == "E":
                         ingredient.position = (ingredient.position[0] - 1, ingredient.position[1])
+                    else:
+                        ingredient.kill()
             elif direction == "T":
                 ingredient.rect.top -= 1
-                if ingredient.rect.centery <= (ingredient.position[1] + 1) *TILE_SIZE + (TILE_SIZE / 2):
+                if ingredient.rect.centery <= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 2):
                     newDirection = self.map[ingredient.position[0]][ingredient.position[1] - 1][0]
                     if newDirection == direction or newDirection == "0" or newDirection == "E":
                         ingredient.position = (ingredient.position[0], ingredient.position[1] - 1)
+                    else:
+                        ingredient.kill()
             elif direction == "B":
                 
                 ingredient.rect.top += 1
-                if ingredient.rect.centery >= (ingredient.position[1] + 1) *TILE_SIZE + (TILE_SIZE / 2):
+                if ingredient.rect.centery >= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 2):
                     newDirection = self.map[ingredient.position[0]][ingredient.position[1] + 1][0]
                     if newDirection == direction or newDirection == "0" or newDirection == "E":
                         ingredient.position = (ingredient.position[0], ingredient.position[1] + 1)
-
-            
+                    else:
+                        ingredient.kill()
                 
 
 
@@ -252,7 +343,7 @@ class Level:
         self.convey()
         self.produce()
         self.ingredient_sprites.custom_draw(self.offset)
-        
+        self.machine_sprites.custom_draw(self.offset)
         if self.mode == "Edit":
             self.Edit()
         elif self.mode == "Info":
@@ -285,6 +376,15 @@ class MainGUI(pygame.sprite.Group):
         self.app = app
 
         BUTTON_SIZE = 97
+
+        self.text_structure = {
+            "Clock": {
+                "font": "OTF_Bold.otf",
+                "font-size": 32,
+                "position": (30, 30),
+                "text": "01월 01일 11:30"
+            }
+        }
 
         self.structure = {
             "B_Info.png": {
@@ -335,15 +435,13 @@ class MainGUI(pygame.sprite.Group):
             elif i == "frame":
                 for frame in os.listdir(f"./gui/main_gui/{i}"):
                     self.frames.append(Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/{i}/{frame}"))))
-            elif i == "text":
-                for text in os.listdir(f"./gui/main_gui/{i}"):
-                    with open(f"./gui/main_gui/{i}/{text}", 'r') as text_data:
-                        text_data = json.loads(text_data.read())
-                        font = text_data["font"]
-                        text = text_data["text"]
-                        position = text_data["position"]
-                        font_size = text_data["font-size"]
-                        self.texts.append(Text(self.app, font, int(font_size), text, (int(position.split(",")[0]), int(position.split(",")[1]))))
+            
+        for text, value in self.text_structure.items():
+            font = value["font"]
+            text = value["text"]
+            position = value["position"]
+            font_size = value["font-size"]
+            self.texts.append(Text(self.app, font, int(font_size), text, position))
 
     def custom_draw(self):
         for frame in self.frames:

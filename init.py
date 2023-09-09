@@ -1,4 +1,4 @@
-import os, json
+import os, json, time
 from settings import *
 
 if not os.path.exists(f"./data"):
@@ -21,6 +21,7 @@ datas = {
 
     "Money": 0,
     "Map": [["0" for i in range(MAP_SIZE[0])] for j in range(MAP_SIZE[1])],
+    "MachineMap": [["0" for i in range(MAP_SIZE[0])] for j in range(MAP_SIZE[1])],
 
 }
 
@@ -34,5 +35,6 @@ if os.path.exists(f"./data/player-data.txt"):
 else:
     with open(f"./data/player-data.txt", "w") as playerData:
         playerData.write(json.dumps(datas))
+        data = datas
 
 print("✅ Initialized Successfully")

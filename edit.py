@@ -20,6 +20,20 @@ direction_list = {
     
 }
 
+def get_direction(dir, count):
+
+    if dir == "RT" or dir == "RB" or dir == "R":
+        return count
+    else:
+        key = ""
+        for i in direction_list.keys():
+            if direction_list[i] == dir:
+                key = i
+                break
+        count = get_direction(key, count + 1)
+
+    return count
+
 class Edit:
     def __init__(self, conveyer: Conveyer, app) -> None:
         self.app = app
@@ -58,8 +72,8 @@ class EditGUI(pygame.sprite.Group):
         self.frames = []
         self.buttons = []
         self.texts = []
-        self.scroll = Scroll((1800, 97))
-        self.scroll.rect.topleft = (50, 900)
+        self.scroll = Scroll((1700, 97))
+        self.scroll.rect.center = (WINDOW_SIZE[0] / 2, 950)
 
         self.app = app
 
@@ -85,7 +99,7 @@ class EditGUI(pygame.sprite.Group):
                 "position": (1765 - BUTTON_SIZE, 780)
             },
             "UI_Bottom.png": {
-                "position": (50, 840)
+                "position": (WINDOW_SIZE[0] / 2, 950)
             },
 
         }
@@ -115,7 +129,7 @@ class EditGUI(pygame.sprite.Group):
                 for frame in os.listdir(f"./gui/edit_gui/{i}"):
                     newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/{i}/{frame}")))
                     newFrame.name = frame
-                    newFrame.rect.topleft = self.structure[frame]["position"]
+                    newFrame.rect.center = self.structure[frame]["position"]
                     self.frames.append(newFrame)
             elif i == "text":
                 for text in os.listdir(f"./gui/edit_gui/{i}"):
@@ -128,6 +142,7 @@ class EditGUI(pygame.sprite.Group):
                         self.texts.append(Text(font, int(font_size), text, (int(position.split(",")[0]), int(position.split(",")[1]))))
 
     def custom_draw(self):
+        self.scroll.custom_draw()
         for frame in self.frames:
             self.app[1].blit(frame.image, frame.rect)
 
@@ -139,7 +154,5 @@ class EditGUI(pygame.sprite.Group):
             newRect.topleft = text.position
             self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)
 
-        self.scroll.custom_draw()
-
-        for child in self.scroll.children:
-            self.app[1].blit(child.image, child.rect)
+        
+            

@@ -9,6 +9,7 @@ class GUI(pygame.sprite.Sprite):
         self.image = surf
         self.name = name
         self.rect = surf.get_rect()
+        self.origin_rect = self.rect.copy()
         
 
 class Frame(GUI):
@@ -51,11 +52,12 @@ class Text():
         self.text: str = text
         self.position = position
         self.app = app
-
+        print(text)
         self.font = pygame.font.Font(f"./font/{font}", font_size)
     
     def render(self):
         text = self.text
+        
         if "%Money%" in text:
             text = text.replace("%Money%", str(self.app[2]["Money"]))
 
@@ -65,7 +67,7 @@ class Scroll(GUI):
     def __init__(self, size, direction="h") -> None:
         super().__init__(pygame.Surface(size))
         self.children = []
-        self.offset = [0, 1]
+        self.offset = [-50, 1]
         self.direction = direction
         self.margin = (20, 5)
         self.prior_mouse_pos = pygame.mouse.get_pos()
@@ -89,7 +91,7 @@ class Scroll(GUI):
 
                     self.offset[0] += clamp(50, (current_mouse_pos[0] - self.prior_mouse_pos[0])) * 0.2
 
-                    self.offset[0] = max(min(self.margin[0] * len(self.children), self.offset[0]), 0)
+                    self.offset[0] = max(min(0, self.offset[0]), -500)
 
         if mouse[0] == 0:
             self.prior_mouse_pos = pygame.mouse.get_pos()
@@ -98,5 +100,14 @@ class Scroll(GUI):
 
     def custom_draw(self):
         for child in self.children:
-            child.rect.left = self.rect.left + self.offset[0] + (child.rect.width + self.margin[0]) * (self.children.index(child))
-            # child.image.srcrect.width = (child.rect.right - self.rect.left) if child.rect.right > self.rect.left else 0
+            child.rect.left = self.rect.left + self.offset[0] + (child.origin_rect.width + self.margin[0]) * (self.children.index(child))
+            child.image.srcrect.width = child.origin_rect.width
+            child.image.srcrect.left = 0
+            child.rect.width = child.image.srcrect.width
+            if child.rect.left < self.rect.left:
+                child.image.srcrect.width = min(max((child.origin_rect.width - (self.rect.left - child.rect.left)), 0), child.origin_rect.width)
+                child.rect.width = child.image.srcrect.width
+                child.image.srcrect.left = (child.origin_rect.width - child.rect.width)
+                print(child.image.srcrect.right)
+                child.rect.left = self.rect.left
+                
