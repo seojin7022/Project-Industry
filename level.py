@@ -290,13 +290,14 @@ class Level:
                     if ingredient.rect.centery + 1 >= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 2):
                         direction = self.map[ingredient.position[0]][ingredient.position[1]][1]
             
-            if self.machine_map[ingredient.position[0]][ingredient.position[1]] != "0":
-                ingredient.manufacture(machine_count[self.machine_map[ingredient.position[0]][ingredient.position[1]]])
+            
 
             if direction == "R": #오른쪽으로 갈때
                 ingredient.rect.left += 1
                 if ingredient.rect.centerx >= (ingredient.position[0]) *TILE_SIZE + (TILE_SIZE / 2):
                     newDirection = self.map[ingredient.position[0] + 1][ingredient.position[1]][0]
+                    if self.machine_map[ingredient.position[0]][ingredient.position[1]] != "0":
+                        ingredient.manufacture(machine_count[self.machine_map[ingredient.position[0]][ingredient.position[1]]])
                     if newDirection == direction or newDirection == "0" or newDirection == "E":
                         ingredient.position = (ingredient.position[0] + 1, ingredient.position[1])
                     else:
@@ -308,7 +309,8 @@ class Level:
                 ingredient.rect.left -= 1
                 if ingredient.rect.centerx <= (ingredient.position[0]) *TILE_SIZE + (TILE_SIZE / 2):
                     newDirection = self.map[ingredient.position[0] - 1][ingredient.position[1]][0]
-                    
+                    if self.machine_map[ingredient.position[0]][ingredient.position[1]] != "0":
+                        ingredient.manufacture(machine_count[self.machine_map[ingredient.position[0]][ingredient.position[1]]])
                     if newDirection == direction or newDirection == "0" or newDirection == "E":
                         ingredient.position = (ingredient.position[0] - 1, ingredient.position[1])
                     else:
@@ -317,6 +319,8 @@ class Level:
                 ingredient.rect.top -= 1
                 if ingredient.rect.centery <= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 2):
                     newDirection = self.map[ingredient.position[0]][ingredient.position[1] - 1][0]
+                    if self.machine_map[ingredient.position[0]][ingredient.position[1]] != "0":
+                        ingredient.manufacture(machine_count[self.machine_map[ingredient.position[0]][ingredient.position[1]]])
                     if newDirection == direction or newDirection == "0" or newDirection == "E":
                         ingredient.position = (ingredient.position[0], ingredient.position[1] - 1)
                     else:
@@ -326,6 +330,8 @@ class Level:
                 ingredient.rect.top += 1
                 if ingredient.rect.centery >= (ingredient.position[1]) *TILE_SIZE + (TILE_SIZE / 2):
                     newDirection = self.map[ingredient.position[0]][ingredient.position[1] + 1][0]
+                    if self.machine_map[ingredient.position[0]][ingredient.position[1]] != "0":
+                        ingredient.manufacture(machine_count[self.machine_map[ingredient.position[0]][ingredient.position[1]]])
                     if newDirection == direction or newDirection == "0" or newDirection == "E":
                         ingredient.position = (ingredient.position[0], ingredient.position[1] + 1)
                     else:
@@ -382,7 +388,16 @@ class MainGUI(pygame.sprite.Group):
                 "font": "OTF_Bold.otf",
                 "font-size": 32,
                 "position": (30, 30),
+                "color": (0, 0, 0),
                 "text": "01월 01일 11:30"
+            },
+
+            "Money": {
+                "font": "OTF_Bold.otf",
+                "font-size": 32,
+                "position": (800, 30),
+                "color": (200, 200, 0),
+                "text": "%Money%"
             }
         }
 
@@ -440,8 +455,9 @@ class MainGUI(pygame.sprite.Group):
             font = value["font"]
             text = value["text"]
             position = value["position"]
+            color = value["color"]
             font_size = value["font-size"]
-            self.texts.append(Text(self.app, font, int(font_size), text, position))
+            self.texts.append(Text(self.app, font, int(font_size), text, position, color))
 
     def custom_draw(self):
         for frame in self.frames:

@@ -47,13 +47,14 @@ class Button(GUI):
             self.hover_image_rect.topleft = self.rect.topleft
             renderer.blit(self.hover_image, self.hover_image_rect)
 class Text():
-    def __init__(self, app, font, font_size, text, position) -> None:
+    def __init__(self, app, font, font_size, text, position, color) -> None:
         self.font_size = font_size
         self.text: str = text
         self.position = position
         self.app = app
-        print(text)
+        self.color = color
         self.font = pygame.font.Font(f"./font/{font}", font_size)
+        
     
     def render(self):
         text = self.text
@@ -61,7 +62,7 @@ class Text():
         if "%Money%" in text:
             text = text.replace("%Money%", str(self.app[2]["Money"]))
 
-        return self.font.render(text, True, (0, 0, 0))
+        return self.font.render(text, True, self.color)
     
 class Scroll(GUI):
     def __init__(self, size, direction="h") -> None:
