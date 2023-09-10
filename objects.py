@@ -15,11 +15,11 @@ machine_count = {
     "Peel_Machine": 1,
 }
 
-class StartPoint(pygame.sprite.Sprite):
-    def __init__(self, surf, app) -> None:
+class SpecialPoint(pygame.sprite.Sprite):
+    def __init__(self, surf, app, name) -> None:
         super().__init__()
         self.position = (0, 0)
-
+        self.name = name
         if type(surf) == Image:
             self.image = Image(surf.texture)
             self.image.angle = surf.angle

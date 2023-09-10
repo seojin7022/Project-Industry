@@ -1,4 +1,4 @@
-import pygame, threading, time
+import pygame, threading, time, datetime
 from pygame._sdl2 import *
 from settings import *
 from tile import Tile
@@ -42,11 +42,17 @@ class Level:
         #Map
         self.map = self.app[2]["Map"]
         self.machine_map = self.app[2]["MachineMap"]
-        self.map[0][0] = "S"
-        self.map[5][5] = "E"
-        self.startpoint = (0, 0)
-        self.endpoint = (5, 5)
+        self.startpoint = None
+        self.endpoint = None
 
+        for i in range(MAP_SIZE[1]):
+            for j in range(MAP_SIZE[0]):
+                if self.map[i][j] == "S":
+                    self.startpoint = (i, j)
+                elif self.map[i][j] == "E":
+                    self.endpoint = (i, j)
+
+        
         #System
         self.info_system = Info(self.app)
         self.edit_system = Edit(Conveyer(pygame.image.load(f"./img/Tiles/CVB-1.png"), self.app), self.app)
@@ -176,6 +182,11 @@ class Level:
             if not self.isGuiCollide and self.mode == "Edit": #컨베이어 벨트 설치
                 if self.edit_system.delete_mode:
 
+                    if self.map[self.edit_system.delete_pos[0]][ self.edit_system.delete_pos[1]] == "S":
+                        self.startpoint = None
+                    elif self.map[self.edit_system.delete_pos[0]][ self.edit_system.delete_pos[1]] == "E":
+                        self.endpoint = None
+
                     if self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] != "0":
 
                         for sprite in self.machine_sprites.sprites():
@@ -220,7 +231,7 @@ class Level:
                                 self.animation_sprites.add(UI_No_Machine)
                                 threading.Thread(target=a, kwargs={"obj": UI_No_Machine}).start()
                                 
-                    else:
+                    elif type(self.edit_system.conveyer) == Conveyer:
                         if self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] == "0":
                             newConveyer = Conveyer(self.edit_system.conveyer.image,self.app,  direction=self.edit_system.conveyer.direction)
                             newConveyer.image.alpha = 255
@@ -228,6 +239,26 @@ class Level:
                             self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.direction
                             newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
                             self.visible_sprites.add(newConveyer)
+                    else:
+                        if self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] == "0":
+                            if self.edit_system.conveyer.name == "S":
+                                if self.startpoint == None:
+                                    self.startpoint = self.edit_system.delete_pos
+                                    newConveyer = SpecialPoint(self.edit_system.conveyer.image,self.app,  name=self.edit_system.conveyer.name)
+                                    newConveyer.image.alpha = 255
+                                    newConveyer.position = self.edit_system.conveyer.position
+                                    self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.name
+                                    newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                                    self.visible_sprites.add(newConveyer)
+                            else:
+                                if self.endpoint == None:
+                                    self.endpoint = self.edit_system.delete_pos
+                                    newConveyer = SpecialPoint(self.edit_system.conveyer.image,self.app,  name=self.edit_system.conveyer.name)
+                                    newConveyer.image.alpha = 255
+                                    newConveyer.position = self.edit_system.conveyer.position
+                                    self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.name
+                                    newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                                    self.visible_sprites.add(newConveyer)
 
             if self.mode == "Shop":
                 self.shop_gui_sprites.update_select(self.shop_system.selected_machine, self.shop_system.select_count)
@@ -265,6 +296,7 @@ class Level:
         self.edit_system.run(self.floor_sprites, self.offset)
 
     def produce(self):
+        if self.startpoint == None: return
         if pygame.time.get_ticks() - self.last_produce_time > 1000:
             if self.startpoint[0] < MAP_SIZE[0] - 1:
                 
@@ -388,6 +420,7 @@ class Level:
         if self.mode != "None":
             self.modes[self.mode][0].custom_draw()
         self.gui_sprites.update_money()
+        self.gui_sprites.update_clock()
         self.gui_sprites.custom_draw()
         self.hover()
 
@@ -408,6 +441,8 @@ class MainGUI(GUIFrame):
     def __init__(self, app) -> None:
         super().__init__(app, "main_gui")
         BUTTON_SIZE = 97
+
+        self.last_clock_time = pygame.time.get_ticks()
 
         self.text_structure = {
             "Clock": {
@@ -434,32 +469,22 @@ class MainGUI(GUIFrame):
         }
 
         self.button_structure = {
-            "B_Info": {
-                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 2),
-            },
-
-            "B_Bank": {
-                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 3),
-            },
 
             "B_Shop": {
                 "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 4),
             },
 
-            "B_Stock": {
-                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 5),
-            },
 
             "B_Menu": {
                 "position": (1915 -  BUTTON_SIZE / 2, BUTTON_SIZE / 2 + 5),
             },
 
             "B_Edit": {
-                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 6)
+                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 5)
             },
 
             "B_Contract": {
-                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 7)
+                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 6)
             }
         }
 
@@ -470,3 +495,13 @@ class MainGUI(GUIFrame):
         for text in self.texts:
             if text.name == "Money":
                 text.text = str(self.app[2]["Money"])
+    def update_clock(self):
+        if pygame.time.get_ticks() - self.last_clock_time >= 1000:
+            self.last_clock_time = pygame.time.get_ticks()
+            newClock = self.app[2]["Clock"]
+            newDate = datetime.datetime(newClock[0], newClock[1], newClock[2], newClock[3], newClock[4])
+            newDate += datetime.timedelta(days=0, hours=0, minutes=10)
+            self.app[2]["Clock"] = [newDate.year, newDate.month, newDate.day, newDate.hour, newDate.minute]
+            for text in self.texts:
+                if text.name == "Clock":
+                    text.text = str(newDate.month) + "월 " + str(newDate.day) + "일 " + str(newDate.hour) + "시 " + str(newDate.minute) + "분"

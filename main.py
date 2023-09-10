@@ -1,4 +1,4 @@
-import os, ctypes, json
+import os, ctypes, json, cv2
 
 with open(f"./requirements.txt", 'r') as requirements:
     for requirement in requirements.readlines():
@@ -29,6 +29,27 @@ class Game: #게임 클래스
         self.level = Level([self.window, self.renderer, init.data, init.isFirstStarter])
 
         self.clock = pygame.time.Clock()
+
+    def play_intro(self):
+        video = cv2.VideoCapture("./img/LoadingScreen.mp4")
+        ret, frame = video.read()
+        while ret:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            self.renderer.clear()
+
+            if ret:
+                image = pygame.image.frombytes(frame.tobytes(), (1920, 1080), "RGB")
+                self.renderer.blit(Texture.from_surface(self.renderer, image), pygame.Rect(0, 0, 1920 / self.renderer.scale[0], 1080 / self.renderer.scale[1]))
+            ret, frame = video.read()
+
+            self.renderer.present()
+            self.clock.tick(FPS)
+        
+        return ret
         
     def run(self):
 
@@ -50,4 +71,5 @@ class Game: #게임 클래스
 
 if __name__ == "__main__":
     game = Game()
+    game.play_intro()
     game.run()

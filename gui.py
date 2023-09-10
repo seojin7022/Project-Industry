@@ -199,7 +199,14 @@ class GUIFrame(pygame.sprite.Group):
 
         for scroll, value in self.scroll_structure.items():
             for button in os.listdir(f"./gui/{self.name}/scroll/{scroll}"):
-                newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/scroll/{scroll}/{button}"))), None)
+                if "_Hover" in button: continue
+                hover_img = None
+                    
+                if os.path.exists(f"./gui/{self.name}/scroll/{scroll}/{button.split('.')[0]}_Hover.png"):
+                    
+                    hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/scroll/{scroll}/{button.split('.')[0]}_Hover.png")))
+
+                newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/scroll/{scroll}/{button}"))), hover_img)
                 newButton.name = button.split(".")[0]
                 self.buttons.append(newButton)
                 value.add_children(newButton)

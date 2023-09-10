@@ -48,8 +48,8 @@ ingredient_price = {
 }
 
 ingredient_real_name = {
-    "Oak_0": "통나무",
-    "Oak_1": "껍질 깐 통나무",
+    "Oak_0": "원목",
+    "Oak_1": "껍질 벗긴 원목",
     "Oak_2": "나무 판자",
     "Oak_3": "나무 막대"
 }

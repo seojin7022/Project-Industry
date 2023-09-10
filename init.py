@@ -1,4 +1,4 @@
-import os, json, time
+import os, json, datetime
 from settings import *
 
 if not os.path.exists(f"./data"):
@@ -30,7 +30,9 @@ datas = {
         "Oak_1": 0,
         "Oak_2": 0,
         "Oak_3": 0,
-    }
+    },
+
+    "Clock": [2023, 1, 1, 0, 0]
 }
 
 data = {}

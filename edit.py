@@ -54,6 +54,10 @@ class Edit:
             self.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction="RB")
         elif button.name == "UI_Edit_Peel_Machine":
             self.conveyer = Machine(pygame.image.load(f"./img/Tiles/{button.name.replace('UI_Edit_', '')}.png"),self.app, name=button.name.replace('UI_Edit_', ''))
+        elif button.name == "UI_Edit_Container":
+            self.conveyer = SpecialPoint(pygame.image.load(f"./img/Tiles/Container.png"),self.app, "S")
+        elif button.name == "UI_Edit_EndPoint":
+            self.conveyer = SpecialPoint(pygame.image.load(f"./img/Tiles/T_Out.png"),self.app, "E")
                 
         elif button.name == "B_Delete":
             if self.delete_mode:
