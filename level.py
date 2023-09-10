@@ -232,6 +232,9 @@ class Level:
             if self.mode == "Shop":
                 self.shop_gui_sprites.update_select(self.shop_system.selected_machine, self.shop_system.select_count)
             
+            elif self.mode == "Contract":
+                self.contract_gui_sprites.update_contract(self.contract_system.easy_contract, self.contract_system.normal_contract, self.contract_system.hard_contract)
+            
             
 
                         
@@ -279,7 +282,7 @@ class Level:
                 continue
             elif direction == "E":
                 ingredient.kill()
-                self.app[2]["Money"] += ingredient.money
+                self.app[2]["Inventory"][ingredient.name + str(ingredient.count)] += 1
                 continue
             
             if len(direction) == 2:

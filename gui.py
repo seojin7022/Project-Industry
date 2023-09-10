@@ -155,7 +155,7 @@ class GUIFrame(pygame.sprite.Group):
                 for i in v:
 
                     newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/frame/{frame}.png")))
-                    newFrame.name = frame
+                    newFrame.name = frame + str(v.index(i))
                     newFrame.rect.center = i["position"]
                     self.frames.append(newFrame)
             else:
@@ -174,7 +174,7 @@ class GUIFrame(pygame.sprite.Group):
                         hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/button/{button}_Hover.png")))
                         
                     newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/button/{button}.png"))), hover_img)
-                    newButton.name = button
+                    newButton.name = button  + str(v.index(i))
                     newButton.rect.center = i["position"]
                     self.buttons.append(newButton)
             else:

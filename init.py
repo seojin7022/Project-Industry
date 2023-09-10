@@ -24,6 +24,12 @@ datas = {
     "MachineMap": [["0" for i in range(MAP_SIZE[0])] for j in range(MAP_SIZE[1])],
     "Machines": {
         "Peel_Machine": 0,
+    },
+    "Inventory": {
+        "Oak_0": 0,
+        "Oak_1": 0,
+        "Oak_2": 0,
+        "Oak_3": 0,
     }
 }
 
