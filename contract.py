@@ -44,6 +44,8 @@ class Contract:
                 for k, v in self.easy_contract.kind.items():
                     self.app[2]["Inventory"][k] -= v
                 self.app[2]["Money"] += self.easy_contract.reward
+                easy_contract = contracts["Easy"][random.randint(0, len(contracts["Easy"]) - 1)]
+                self.easy_contract = ContractInfo(easy_contract["dialogue"], easy_contract["kind"], easy_contract["reward"])
 
         elif button.name == "B_Accept1": #Normal Contract
             isAcceptable = True
@@ -55,6 +57,8 @@ class Contract:
                 for k, v in self.normal_contract.kind.items():
                     self.app[2]["Inventory"][k] -= v
                 self.app[2]["Money"] += self.normal_contract.reward
+                normal_contract = contracts["Normal"][random.randint(0, len(contracts["Normal"]) - 1)]
+                self.normal_contract = ContractInfo(normal_contract["dialogue"], normal_contract["kind"], normal_contract["reward"])
 
         elif button.name == "B_Accept2": #Hard Contract
             isAcceptable = True
@@ -66,6 +70,8 @@ class Contract:
                 for k, v in self.hard_contract.kind.items():
                     self.app[2]["Inventory"][k] -= v
                 self.app[2]["Money"] += self.hard_contract.reward
+                hard_contract = contracts["Hard"][random.randint(0, len(contracts["Hard"]) - 1)]
+                self.hard_contract = ContractInfo(hard_contract["dialogue"], hard_contract["kind"], hard_contract["reward"])
 
         elif button.name == "B_Cancel0": #Easy Contract Cancel
             easy_contract = contracts["Easy"][random.randint(0, len(contracts["Easy"]) - 1)]

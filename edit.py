@@ -42,6 +42,7 @@ class Edit:
         self.delete_pos = (0, 0)
         self.r_pressed = False
 
+
     def click(self, button: Button):
         if button.name != "B_Delete":
             self.delete_mode = False
@@ -52,7 +53,7 @@ class Edit:
             self.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-2.png"),self.app, direction="RT")
         elif button.name == "UI_Edit_CVB_RB":
             self.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction="RB")
-        elif button.name == "UI_Edit_Peel_Machine":
+        elif "Machine" in button.name:
             self.conveyer = Machine(pygame.image.load(f"./img/Tiles/{button.name.replace('UI_Edit_', '')}.png"),self.app, name=button.name.replace('UI_Edit_', ''))
         elif button.name == "UI_Edit_Container":
             self.conveyer = SpecialPoint(pygame.image.load(f"./img/Tiles/Container.png"),self.app, "S")
@@ -116,6 +117,16 @@ class EditGUI(GUIFrame):
             "B_Delete": {
                 "position": (1765 - BUTTON_SIZE, 780)
             },
+        }
+
+        self.text_structure = {
+            "Rotate_text": {
+                "font": "OTF_Bold.otf",
+                "font-size": 25,
+                "text": "회전: R",
+                "position": (WINDOW_SIZE[0] / 2 + 600, 850),
+                "color": (0, 0, 0)
+            }
         }
 
         edit_scroll = Scroll((1700, 97))

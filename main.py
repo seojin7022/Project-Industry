@@ -9,6 +9,7 @@ import pygame, sys
 from pygame._sdl2 import *
 from settings import *
 from level import Level
+from lobby import Lobby
 
 user32 = ctypes.windll.user32
 user32.SetProcessDPIAware()
@@ -16,7 +17,7 @@ user32.SetProcessDPIAware()
 class Game: #게임 클래스
     def __init__(self) -> None:
         pygame.init()
-        self.window = Window("Factory", WINDOW_SIZE)
+        self.window = Window("나만의 공장", WINDOW_SIZE)
         self.window.maximize()
         
         self.renderer = Renderer(self.window)
@@ -24,8 +25,10 @@ class Game: #게임 클래스
         surf = pygame.Surface(WINDOW_SIZE)
         surf.fill((255,255,255))
         self.background = Texture.from_surface(self.renderer, surf)
-        
 
+        
+        
+        self.lobby = Lobby([self.window, self.renderer])
         self.level = Level([self.window, self.renderer, init.data, init.isFirstStarter])
 
         self.clock = pygame.time.Clock()
@@ -50,9 +53,27 @@ class Game: #게임 클래스
             self.clock.tick(FPS)
         
         return ret
+    
+    def main(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            
+            self.renderer.clear()
+            self.renderer.blit(self.background, pygame.Rect(0, 0, WINDOW_SIZE[0], WINDOW_SIZE[1]))
+            out = self.lobby.run()
+
+            if out:
+                return
+            
+            self.renderer.present()
+            self.clock.tick(FPS)
         
     def run(self):
-
+        print("Run")
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -72,4 +93,5 @@ class Game: #게임 클래스
 if __name__ == "__main__":
     game = Game()
     game.play_intro()
+    game.main()
     game.run()
