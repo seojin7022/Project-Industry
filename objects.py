@@ -13,7 +13,8 @@ ingredients = {
 
 machine_count = {
     "Peel_Machine": 1,
-    "Extrude_Machine": 3
+    "Extrude_Machine": 3,
+    "Plank_Machine": 2,
 }
 
 class SpecialPoint(pygame.sprite.Sprite):

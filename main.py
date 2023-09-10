@@ -73,7 +73,6 @@ class Game: #게임 클래스
             self.clock.tick(FPS)
         
     def run(self):
-        print("Run")
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

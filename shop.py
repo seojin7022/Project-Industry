@@ -125,6 +125,7 @@ class ShopGUI(GUIFrame):
         self.load_guis()
 
     def update_select(self, selected_machine, select_count):
+        print(selected_machine)
         if select_count != self.select_count:
             self.select_count = select_count
             for text in self.texts:

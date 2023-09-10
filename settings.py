@@ -6,6 +6,7 @@ MAP_SIZE = (30, 30)
 shop_items = {
     "Peel_Machine": 350,
     "Extrude_Machine": 2000,
+    "Plank_Machine": 1000,
 }
 
 contracts = {

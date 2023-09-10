@@ -25,6 +25,7 @@ datas = {
     "Machines": {
         "Peel_Machine": 0,
         "Extrude_Machine": 0,
+        "Plank_Machine": 0,
     },
     "Inventory": {
         "Oak_0": 0,
