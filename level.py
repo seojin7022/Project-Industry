@@ -119,8 +119,8 @@ class Level:
         self.isGuiCollide = False
 
         if self.mode != "None":
-            if hasattr(self.modes[self.mode][0], "scroll"):
-                self.isGuiCollide = self.modes[self.mode][0].scroll.drag(mouse)
+            for scroll in self.modes[self.mode][0].scrolls:
+                self.isGuiCollide = scroll.drag(mouse)
                 
         
         if (mouse[2] and not self.isGuiCollide):
@@ -147,91 +147,69 @@ class Level:
                 button:Button
                 if button.rect.collidepoint(pygame.mouse.get_pos()):
                     self.isGuiCollide = True
-                    if button.name == "B_Edit.png" and self.mode != "Edit":
+                    if button.name == "B_Edit" and self.mode != "Edit":
                         self.mode = "Edit"
                         self.edit_system.run(self.floor_sprites, self.offset)
-                    elif button.name == "B_Info.png" and self.mode != "Info":
+                    elif button.name == "B_Info" and self.mode != "Info":
                         self.mode = "Info"
                         self.info_system.run()
-                    elif button.name == "B_Shop.png" and self.mode != "Shop":
+                    elif button.name == "B_Shop" and self.mode != "Shop":
                         self.mode = "Shop"
                         self.shop_system.run()
-                    elif button.name == "B_Contract.png" and self.mode != "Contract":
+                    elif button.name == "B_Contract" and self.mode != "Contract":
                         self.mode = "Contract"
                         self.contract_system.run()
+
+            if self.mode != "None":
+                for button in self.modes[self.mode][0].buttons:
+                    if button.rect.collidepoint(pygame.mouse.get_pos()):
+                        self.isGuiCollide = True
+                        self.modes[self.mode][1].click(button)
+                        if button.name == "B_Close":
+                            self.mode = "None"
+                            button.hover_out(self.renderer, self.animation_sprites)
             
-            if self.mode == "Edit":
-                for button in self.edit_gui_sprites.buttons:
-                    button:Button
-                    if button.rect.collidepoint(pygame.mouse.get_pos()):
-                        self.isGuiCollide = True
-                        if button.name != "B_Delete.png":
-                            self.edit_system.delete_mode = False
-
-                        if button.name == "UI_Edit_CVB_R.png":
-                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png"),self.app, direction="R")
-                        elif button.name == "UI_Edit_CVB_RT.png":
-                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-2.png"),self.app, direction="RT")
-                        elif button.name == "UI_Edit_CVB_RB.png":
-                            self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction="RB")
-                        elif button.name == "UI_Edit_Peel_Machine.png":
-                            self.edit_system.conveyer = Machine(pygame.image.load(f"./img/Tiles/{button.name.replace('UI_Edit_', '')}"),self.app, name=button.name.replace('UI_Edit_', '').split(".")[0])
-                            print(self.edit_system.conveyer.name)
-                        elif button.name == "B_Delete.png":
-                            if self.edit_system.delete_mode:
-                                self.edit_system.delete_mode = False
-                                self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png"),self.app, direction="R")
-                            else:
-                                self.edit_system.delete_mode = True
-                                self.edit_system.conveyer = Conveyer(pygame.image.load("./img/Tiles/UI_Delete.png"),self.app, direction="R")
-                        else:
-                            self.mode = "None"
-                            self.edit_system.delete_mode = False
-                            for button in self.edit_gui_sprites.buttons:
-                                button.hover_out(self.app[1], self.animation_sprites)
+            
                 
-                if not self.isGuiCollide: #컨베이어 벨트 설치
-                    if self.edit_system.delete_mode:
+            if not self.isGuiCollide and self.mode == "Edit": #컨베이어 벨트 설치
+                if self.edit_system.delete_mode:
 
-                        if self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] != "0":
-                            self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] = "0"
+                    if self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] != "0":
+                        self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] = "0"
 
-                            for sprite in self.machine_sprites.sprites():
-                                if type(sprite) == Machine:
-                                    if sprite.position == self.edit_system.delete_pos:
-                                        sprite.kill()
-                        else:
-                        
-                            self.map[self.edit_system.delete_pos[0]][ self.edit_system.delete_pos[1]] = "0"
-                            for sprite in self.visible_sprites.sprites():
-                                if type(sprite) == Conveyer:
-                                    if sprite.position == self.edit_system.delete_pos:
-                                        sprite.kill()
+                        for sprite in self.machine_sprites.sprites():
+                            if type(sprite) == Machine:
+                                if sprite.position == self.edit_system.delete_pos:
+                                    sprite.kill()
                     else:
-                        if type(self.edit_system.conveyer) == Machine:
-                            if not self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] in ["0","E", "S"]:
-                                newMachine = Machine(self.edit_system.conveyer.image, self.app, name=self.edit_system.conveyer.name)
-                                newMachine.image.alpha = 255
-                                newMachine.position = self.edit_system.conveyer.position
-                                self.machine_map[newMachine.position[0]][newMachine.position[1]] = newMachine.name
-                                newMachine.rect.topleft = (newMachine.position[0] * TILE_SIZE, newMachine.position[1] * TILE_SIZE)
-                                self.machine_sprites.add(newMachine)
-                        else:
-                            if self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] == "0":
-                                newConveyer = Conveyer(self.edit_system.conveyer.image,self.app,  direction=self.edit_system.conveyer.direction)
-                                newConveyer.image.alpha = 255
-                                newConveyer.position = self.edit_system.conveyer.position
-                                self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.direction
-                                newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
-                                self.visible_sprites.add(newConveyer)
-            if self.mode == "Info":
-                for button in self.info_gui_sprites.buttons:
-                    button:Button
-                    if button.rect.collidepoint(pygame.mouse.get_pos()):
-                        self.isGuiCollide = True
-                        if button.name == "B_Close.png":
-                            self.mode = "None"
-                            button.hover_out(self.app[1], self.animation_sprites)
+                    
+                        self.map[self.edit_system.delete_pos[0]][ self.edit_system.delete_pos[1]] = "0"
+                        for sprite in self.visible_sprites.sprites():
+                            if type(sprite) == Conveyer:
+                                if sprite.position == self.edit_system.delete_pos:
+                                    sprite.kill()
+                else:
+                    if type(self.edit_system.conveyer) == Machine:
+                        if not self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] in ["0","E", "S"]:
+                            newMachine = Machine(self.edit_system.conveyer.image, self.app, name=self.edit_system.conveyer.name)
+                            newMachine.image.alpha = 255
+                            newMachine.position = self.edit_system.conveyer.position
+                            self.machine_map[newMachine.position[0]][newMachine.position[1]] = newMachine.name
+                            newMachine.rect.topleft = (newMachine.position[0] * TILE_SIZE, newMachine.position[1] * TILE_SIZE)
+                            self.machine_sprites.add(newMachine)
+                            self.app[2]["Machines"][self.edit_system.conveyer.name.replace("UI_Edit_", "")] -= 1
+                    else:
+                        if self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] == "0":
+                            newConveyer = Conveyer(self.edit_system.conveyer.image,self.app,  direction=self.edit_system.conveyer.direction)
+                            newConveyer.image.alpha = 255
+                            newConveyer.position = self.edit_system.conveyer.position
+                            self.map[newConveyer.position[0]][newConveyer.position[1]] = newConveyer.direction
+                            newConveyer.rect.topleft = (newConveyer.position[0] * TILE_SIZE, newConveyer.position[1] * TILE_SIZE)
+                            self.visible_sprites.add(newConveyer)
+
+            if self.mode == "Shop":
+                self.shop_gui_sprites.update_select(self.shop_system.selected_machine, self.shop_system.select_count)
+            
             
 
                         
@@ -365,6 +343,7 @@ class Level:
             pass
         if self.mode != "None":
             self.modes[self.mode][0].custom_draw()
+        self.gui_sprites.update_money()
         self.gui_sprites.custom_draw()
         self.hover()
 
@@ -381,15 +360,9 @@ class SortCamera(pygame.sprite.Group):
             sprite.real_rect.topleft = (sprite.rect.left + offset[0], sprite.rect.top + offset[1])
 
 
-class MainGUI(pygame.sprite.Group):
+class MainGUI(GUIFrame):
     def __init__(self, app) -> None:
-        super().__init__()
-        self.frames = []
-        self.buttons = []
-        self.texts = []
-
-        self.app = app
-
+        super().__init__(app, "main_gui")
         BUTTON_SIZE = 97
 
         self.text_structure = {
@@ -406,81 +379,50 @@ class MainGUI(pygame.sprite.Group):
                 "font-size": 32,
                 "position": (800, 30),
                 "color": (200, 200, 0),
-                "text": "%Money%"
+                "text": "0"
             }
         }
 
-        self.structure = {
-            "B_Info.png": {
-                "position": (10, BUTTON_SIZE * 2),
-            },
-
-            "B_Bank.png": {
-                "position": (10, BUTTON_SIZE * 3),
-            },
-
-            "B_Shop.png": {
-                "position": (10, BUTTON_SIZE * 4),
-            },
-
-            "B_Stock.png": {
-                "position": (10, BUTTON_SIZE * 5),
-            },
-
-            "B_Menu.png": {
-                "position": (1920 - BUTTON_SIZE, 7),
-            },
-
-            "B_Edit.png": {
-                "position": (10, BUTTON_SIZE * 6)
-            },
-
-            "B_Contract.png": {
-                "position": (10, BUTTON_SIZE * 7)
+        self.frame_structure = {
+            "UI_Topbar": {
+                "position": (WINDOW_SIZE[0] / 2, WINDOW_SIZE[1] / 2)
             }
+        }
 
-            
+        self.button_structure = {
+            "B_Info": {
+                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 2),
+            },
 
+            "B_Bank": {
+                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 3),
+            },
+
+            "B_Shop": {
+                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 4),
+            },
+
+            "B_Stock": {
+                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 5),
+            },
+
+            "B_Menu": {
+                "position": (1915 -  BUTTON_SIZE / 2, BUTTON_SIZE / 2 + 5),
+            },
+
+            "B_Edit": {
+                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 6)
+            },
+
+            "B_Contract": {
+                "position": (BUTTON_SIZE / 2, BUTTON_SIZE * 7)
+            }
         }
 
         self.load_guis()
 
-    def load_guis(self):
-        for i in os.listdir("./gui/main_gui"):
-            if i == "button":
-                for button in os.listdir("./gui/main_gui/button"):
-                    if button.endswith("_Hover.png"): continue
-                    hover_img = None
-                    
-                    if os.path.exists(f"./gui/main_gui/button/{button.split('.')[0] + '_Hover.png'}"):
-                        
-                        hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/button/{button.split('.')[0] + '_Hover.png'}")))
-                        
-                    newButton = Button(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/button/{button}")), hover_img)
-                    newButton.name = button
-                    newButton.rect.topleft = self.structure[button]["position"]
-                    self.buttons.append(newButton)
-            elif i == "frame":
-                for frame in os.listdir(f"./gui/main_gui/{i}"):
-                    self.frames.append(Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/main_gui/{i}/{frame}"))))
-            
-        for text, value in self.text_structure.items():
-            font = value["font"]
-            text = value["text"]
-            position = value["position"]
-            color = value["color"]
-            font_size = value["font-size"]
-            self.texts.append(Text(self.app, font, int(font_size), text, position, color))
-
-    def custom_draw(self):
-        for frame in self.frames:
-            self.app[1].blit(frame.image, frame.rect)
-
-        for button in self.buttons:
-            self.app[1].blit(button.image, button.rect)
-
+    
+    def update_money(self):
         for text in self.texts:
-            newRect = text.render().get_rect()
-            newRect.topleft = text.position
-            self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)
-
+            if text.name == "Money":
+                text.text = str(self.app[2]["Money"])

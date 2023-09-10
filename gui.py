@@ -1,4 +1,4 @@
-import pygame
+import pygame, os
 from pygame._sdl2 import *
 from settings import *
 from gamemath import *
@@ -47,22 +47,21 @@ class Button(GUI):
             self.hover_image_rect.topleft = self.rect.topleft
             renderer.blit(self.hover_image, self.hover_image_rect)
 class Text():
-    def __init__(self, app, font, font_size, text, position, color) -> None:
+    def __init__(self, app, font, font_size, text, position, color, name) -> None:
         self.font_size = font_size
         self.text: str = text
         self.position = position
         self.app = app
         self.color = color
         self.font = pygame.font.Font(f"./font/{font}", font_size)
-        
-    
-    def render(self):
-        text = self.text
-        
-        if "%Money%" in text:
-            text = text.replace("%Money%", str(self.app[2]["Money"]))
+        self.name = name
 
-        return self.font.render(text, True, self.color)
+        self.text_format = {
+            "%Price%": shop_items
+        }
+
+    def render(self):
+        return self.font.render(str(self.text), True, self.color)
     
 class Scroll(GUI):
     def __init__(self, size, direction="h", max_count = 1) -> None:
@@ -129,4 +128,95 @@ class Scroll(GUI):
                 child.rect.height = child.image.srcrect.height
                 child.image.srcrect.top = (child.origin_rect.height - child.rect.height)
                 child.rect.top = self.rect.top
-                
+
+
+class GUIFrame(pygame.sprite.Group):
+    def __init__(self, app, name) -> None:
+        super().__init__()
+        self.name = name
+        self.frames = []
+        self.buttons = []
+        self.texts = []
+        self.scrolls = []
+
+        self.app = app
+
+        self.frame_structure = {}
+        self.button_structure = {}
+        self.text_structure: {str: {str: str, str: str, str: tuple, str: tuple, str: int}} = {}
+        self.scroll_structure = {}
+
+    def load_guis(self):
+
+        
+        
+        for frame, v in self.frame_structure.items():
+            if type(v) == list:
+                for i in v:
+
+                    newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/frame/{frame}.png")))
+                    newFrame.name = frame
+                    newFrame.rect.center = i["position"]
+                    self.frames.append(newFrame)
+            else:
+                newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/frame/{frame}.png")))
+                newFrame.name = frame
+                newFrame.rect.center = v["position"]
+                self.frames.append(newFrame)
+
+        for button, v in self.button_structure.items():
+            if type(v) == list:
+                for i in v:
+                    hover_img = None
+                            
+                    if os.path.exists(f"./gui/{self.name}/button/{button}_Hover.png"):
+                        
+                        hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/button/{button}_Hover.png")))
+                        
+                    newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/button/{button}.png"))), hover_img)
+                    newButton.name = button
+                    newButton.rect.center = i["position"]
+                    self.buttons.append(newButton)
+            else:
+                hover_img = None
+                    
+                if os.path.exists(f"./gui/{self.name}/button/{button}_Hover.png"):
+                    
+                    hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/button/{button}_Hover.png")))
+                    
+                newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/button/{button}.png"))), hover_img)
+                newButton.name = button
+                newButton.rect.center = v["position"]
+                self.buttons.append(newButton)
+
+        for text_name, value in self.text_structure.items():
+            font = value["font"]
+            text = value["text"]
+            position = value["position"]
+            color = value["color"]
+            font_size = value["font-size"]
+            self.texts.append(Text(self.app, font, int(font_size), text, position, color, text_name))
+
+        for scroll, value in self.scroll_structure.items():
+            for button in os.listdir(f"./gui/{self.name}/scroll/{scroll}"):
+                newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/scroll/{scroll}/{button}"))), None)
+                newButton.name = button.split(".")[0]
+                self.buttons.append(newButton)
+                value.add_children(newButton)
+                self.scrolls.append(value)
+
+    def custom_draw(self):
+        
+        for scroll in self.scrolls:
+            scroll.custom_draw()
+
+        for frame in self.frames:
+            self.app[1].blit(frame.image, frame.rect)
+
+        for button in self.buttons:
+            self.app[1].blit(button.image, button.rect)
+
+        for text in self.texts:
+            newRect = text.render().get_rect()
+            newRect.topleft = text.position
+            self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)

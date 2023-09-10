@@ -1,7 +1,7 @@
 import pygame, os, json
 from pygame._sdl2 import *
 from settings import *
-from objects import Conveyer
+from objects import *
 from gui import *
 
 direction_list = {
@@ -41,6 +41,30 @@ class Edit:
         self.delete_mode = False
         self.delete_pos = (0, 0)
         self.r_pressed = False
+
+    def click(self, button: Button):
+        if button.name != "B_Delete":
+            self.delete_mode = False
+
+        if button.name == "UI_Edit_CVB_R":
+            self.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png"),self.app, direction="R")
+        elif button.name == "UI_Edit_CVB_RT":
+            self.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-2.png"),self.app, direction="RT")
+        elif button.name == "UI_Edit_CVB_RB":
+            self.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction="RB")
+        elif button.name == "UI_Edit_Peel_Machine":
+            if self.app[2]["Machines"][button.name.replace("UI_Edit_", "")] > 0:
+                self.conveyer = Machine(pygame.image.load(f"./img/Tiles/{button.name.replace('UI_Edit_', '')}.png"),self.app, name=button.name.replace('UI_Edit_', ''))
+                
+        elif button.name == "B_Delete":
+            if self.delete_mode:
+                self.delete_mode = False
+                self.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-1.png"),self.app, direction="R")
+            else:
+                self.delete_mode = True
+                self.conveyer = Conveyer(pygame.image.load("./img/Tiles/UI_Delete.png"),self.app, direction="R")
+        else:
+            self.delete_mode = False
         
 
     def run(self, floor_objects, offset):
@@ -66,101 +90,39 @@ class Edit:
 
             self.app[1].blit(self.conveyer.image, self.conveyer.rect)
 
-class EditGUI(pygame.sprite.Group):
+class EditGUI(GUIFrame):
     def __init__(self, app) -> None:
-        super().__init__()
-        self.frames = []
-        self.buttons = []
-        self.texts = []
-        self.scroll = Scroll((1700, 97))
-        self.scroll.rect.center = (WINDOW_SIZE[0] / 2, 920)
-
-        self.app = app
+        super().__init__(app, "edit_gui")
+        
 
         BUTTON_SIZE = 97
 
         
 
-        self.structure = {
-            "UI_Conveyer_R.png": {
-                "position": (200, 890),
-            },
-
-            "UI_Conveyer_RT.png": {
-                "position": (400, 890)
-            },
-            "UI_Conveyer_RB.png": {
-                "position": (600, 890)
-            },
-            "B_Close.png": {
-                "position": (1765, 780)
-            },
-            "B_Delete.png": {
-                "position": (1765 - BUTTON_SIZE, 780)
-            },
-            "UI_Bottom.png": {
+        self.frame_structure = {
+            "UI_Bottom": {
                 "position": (WINDOW_SIZE[0] / 2, 950)
             },
 
         }
 
+        self.button_structure = {
+            "B_Close": {
+                "position": (1765, 780)
+            },
+            "B_Delete": {
+                "position": (1765 - BUTTON_SIZE, 780)
+            },
+        }
+
+        edit_scroll = Scroll((1700, 97))
+        edit_scroll.rect.center = (WINDOW_SIZE[0] / 2, 920)
+
+        self.scroll_structure = {
+            "edit_scroll": edit_scroll
+        }
+
         self.load_guis()
-
-    def load_guis(self):
-        for i in os.listdir("./gui/edit_gui"):
-            if i == "button":
-                for button in os.listdir("./gui/edit_gui/button"):
-                    if button.endswith("_Hover.png"): continue
-                    hover_img = None
-                    
-                    if os.path.exists(f"./gui/edit_gui/button/{button.split('.')[0] + '_Hover.png'}"):
-                        
-                        hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button.split('.')[0] + '_Hover.png'}")))
-                        
-                    newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button}"))), hover_img)
-                    newButton.name = button
-                    if button[0] == "B":
-                        newButton.rect.topleft = self.structure[button]["position"]
-                        self.buttons.append(newButton)
-                    else:
-                        if "Machine" in button:
-                            if not self.app[2]["Machines"].get(button.split(".")[0]):
-                                del newButton
-                                continue
-                            else:
-                                if self.app[2]["Machines"][button.split(".")[0]] == 0:
-                                    del newButton
-                                    continue
-                        self.scroll.add_children(newButton)
-                        self.buttons.append(newButton)
-            elif i == "frame":
-                for frame in os.listdir(f"./gui/edit_gui/{i}"):
-                    newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/{i}/{frame}")))
-                    newFrame.name = frame
-                    newFrame.rect.center = self.structure[frame]["position"]
-                    self.frames.append(newFrame)
-            elif i == "text":
-                for text in os.listdir(f"./gui/edit_gui/{i}"):
-                    with open(f"./gui/edit_gui/{i}/{text}", 'r') as text_data:
-                        text_data = json.loads(text_data.read())
-                        font = text_data["font"]
-                        text = text_data["text"]
-                        position = text_data["position"]
-                        font_size = text_data["font-size"]
-                        self.texts.append(Text(font, int(font_size), text, (int(position.split(",")[0]), int(position.split(",")[1]))))
-
-    def custom_draw(self):
-        self.scroll.custom_draw()
-        for frame in self.frames:
-            self.app[1].blit(frame.image, frame.rect)
-
-        for button in self.buttons:
-            self.app[1].blit(button.image, button.rect)
-
-        for text in self.texts:
-            newRect = text.render().get_rect()
-            newRect.topleft = text.position
-            self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)
 
         
             

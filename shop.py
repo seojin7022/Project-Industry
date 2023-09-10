@@ -1,87 +1,172 @@
-import pygame, os, json
+import pygame
 from pygame._sdl2 import *
 from settings import *
 from gui import *
 
-shop_items = {
-    "Peel_Machine": 1000
-}
+
+shop_select_images = {}
+
+for machine in shop_items.keys():
+    shop_select_images.update({f"{machine}": pygame.image.load(f"./gui/shop_gui/frame/{machine}_Select.png")})
 
 
 class Shop:
     def __init__(self, app) -> None:
         self.app = app
-        
+        self.selected_machine = None
+        self.select_count = 1
+
+    def click(self, button):
+        if "Machine" in button.name:
+            self.selected_machine = button.name
+
+        if button.name == "B_Close":
+            self.selected_machine = None
+            self.select_count = 1
+        elif button.name == "B_NumDown":
+            self.select_count = max(1, self.select_count - 1)
+        elif button.name == "B_NumUp":
+            self.select_count = min(99, self.select_count + 1)
+        elif button.name == "B_Purchase":
+            if self.app[2]["Money"] >= shop_items[self.selected_machine] * self.select_count:
+                if self.app[2]["Machines"].get(self.selected_machine):
+                    self.app[2]["Machines"][self.selected_machine] += self.select_count
+                else:
+                    self.app[2]["Machines"].update({f"{self.selected_machine}": self.select_count})
+                self.app[2]["Money"] -= shop_items[self.selected_machine] * self.select_count
+                self.select_count = 1
+            
 
     def run(self):
         pass
 
-class ShopGUI(pygame.sprite.Group):
+class ShopGUI(GUIFrame):
     def __init__(self, app) -> None:
-        super().__init__()
+        super().__init__(app, "shop_gui")
         self.name = "shop_gui"
-        self.frames = []
-        self.buttons = []
-        self.texts = []
 
-        self.scroll = Scroll((1000, 650), direction="v")
-        self.scroll.rect.center = (WINDOW_SIZE[0] / 2, WINDOW_SIZE[1] / 2 + 100)
+        self.selected_machine = None
+        self.selected_machine_position = (WINDOW_SIZE[0] / 2 + 600, WINDOW_SIZE[1] / 2 - 200)
 
-        self.app = app
+        self.select_count = 1
 
-        self.structure = {
-            "UI_Shop.png": {
+        
+
+        self.frame_structure = {
+            "UI_Shop": {
                 "position": (WINDOW_SIZE[0] / 2, WINDOW_SIZE[1] / 2),
             },
 
-            "B_Cancel.png": {
-                "position": (WINDOW_SIZE[0] / 2 + 350, WINDOW_SIZE[1] / 2 + 360)
+            "UI_Num": {
+                "position": (WINDOW_SIZE[0] / 2 + 650, WINDOW_SIZE[1] / 2)
             },
 
-            "B_Purchase.png": {
-                "position": (WINDOW_SIZE[0] / 2 + 590, WINDOW_SIZE[1] / 2 + 360)
-            }
+        }
 
+        self.button_structure = {
+            "B_Close": {
+                "position": (WINDOW_SIZE[0] / 2 + 750, WINDOW_SIZE[1] / 2 + -400)
+            },
+
+            "B_NumDown": {
+                "position": (WINDOW_SIZE[0] / 2 + 700, WINDOW_SIZE[1] / 2 + 10)
+            },
+
+            "B_NumUp": {
+                "position": (WINDOW_SIZE[0] / 2 + 700, WINDOW_SIZE[1] / 2 - 10)
+            },
+
+            "B_Purchase": {
+                "position": (WINDOW_SIZE[0] / 2 + 600, WINDOW_SIZE[1] / 2 + 200)
+            },
+        }
+
+        self.text_structure = {
+            "price": {
+                "font": "OTF_Medium.otf",
+                "font-size": 20,
+                "text": "1개당 가격:    0원",
+                "position": (WINDOW_SIZE[0] / 2 + 480, WINDOW_SIZE[1] / 2 -50),
+                "color": (0, 0, 0)
+            },
+
+            "select_count_text": {
+                "font": "OTF_Medium.otf",
+                "font-size": 20,
+                "text": "선택 수량:",
+                "position": (WINDOW_SIZE[0] / 2 + 480, WINDOW_SIZE[1] / 2 - 10),
+                "color": (0, 0, 0)
+            },
+
+            "select_count": {
+                "font": "OTF_Bold.otf",
+                "font-size": 30,
+                "text": "1",
+                "position": (WINDOW_SIZE[0] / 2 + 635, WINDOW_SIZE[1] / 2 - 15),
+                "color": (255, 255, 255)
+            },
+
+            "total_price": {
+                "font": "OTF_Medium.otf",
+                "font-size": 20,
+                "text": "최종 가격:    0원",
+                "position": (WINDOW_SIZE[0] / 2 + 480, WINDOW_SIZE[1] / 2 + 30),
+                "color": (0, 0, 0)
+            },
+        }
+
+        shop_scroll = Scroll((1000, 700), direction="v")
+        shop_scroll.rect.center = (WINDOW_SIZE[0] / 2 - 200, WINDOW_SIZE[1] / 2)
+
+        self.scroll_structure = {
+            "shop_scroll": shop_scroll
         }
 
         self.load_guis()
 
-    def load_guis(self):
-        for i in os.listdir(f"./gui/{self.name}"):
-            if i == "button":
-                for button in os.listdir(f"./gui/{self.name}/button"):
-                    if button.endswith("_Hover.png"): continue
-                    hover_img = None
-                    
-                    if os.path.exists(f"./gui/{self.name}/button/{button.split('.')[0] + '_Hover.png'}"):
-                        
-                        hover_img = Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/button/{button.split('.')[0] + '_Hover.png'}")))
-                        
-                    newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/button/{button}"))), hover_img)
-                    newButton.name = button
-                    newButton.rect.center = self.structure[button]["position"]
-                    self.buttons.append(newButton)
-            elif i == "frame":
-                for frame in os.listdir(f"./gui/{self.name}/{i}"):
-                    newFrame = Frame(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/{self.name}/{i}/{frame}")))
-                    newFrame.name = frame
-                    newFrame.rect.center = self.structure[frame]["position"]
-                    self.frames.append(newFrame)
-        for button in os.listdir("./gui/edit_gui/button"):
-            if "Machine" in button:
-                newButton = Button(Image(Texture.from_surface(self.app[1], pygame.image.load(f"./gui/edit_gui/button/{button}"))), None)
-                newButton.name = button.split(".")[0]
-                self.scroll.add_children(newButton)
-                self.buttons.append(newButton)
-    def custom_draw(self):
-        self.scroll.custom_draw()
-        for frame in self.frames:
-            self.app[1].blit(frame.image, frame.rect)
+    def update_select(self, selected_machine, select_count):
+        if select_count != self.select_count:
+            self.select_count = select_count
+            for text in self.texts:
+                if text.name == "total_price":
+                    text.text = f"최종 가격:    {(shop_items[self.selected_machine] if self.selected_machine != None else 0) * self.select_count}원"
+                elif text.name == "select_count":
+                    text.text = str(self.select_count)
+        if selected_machine != None:
+            
+            if selected_machine != self.selected_machine:
+                if self.selected_machine != None:
+                    for frame in self.frames:
+                        if frame.name == self.selected_machine + "_Select":
+                            self.frames.remove(frame)
+                            break
+                self.selected_machine = selected_machine
+                new_selected_machine_frame = Frame(Texture.from_surface(self.app[1], shop_select_images[selected_machine]))
+                new_selected_machine_frame.name = selected_machine + "_Select"
+                new_selected_machine_frame.rect.center = self.selected_machine_position
+                self.frames.append(new_selected_machine_frame)
 
-        for button in self.buttons:
-            self.app[1].blit(button.image, button.rect)
+                for text in self.texts:
+                    if text.name == "price":
+                        text.text = f"1개당 가격:    {shop_items[self.selected_machine]}원"
+                    elif text.name == "select_count":
+                        text.text = str(self.select_count)
+                    elif text.name == "total_price":
+                        text.text = f"최종 가격:    {shop_items[self.selected_machine] * self.select_count}원"
 
-        for text in self.texts:
-            newRect = text.render().get_rect()
-            newRect.topleft = text.position
-            self.app[1].blit(Texture.from_surface(self.app[1], text.render()), newRect)
+        if selected_machine == None:
+            if self.selected_machine != None:
+                for frame in self.frames:
+                    if frame.name == self.selected_machine + "_Select":
+                        self.frames.remove(frame)
+                        break
+                
+                self.selected_machine = None
+                self.select_count = select_count
+                for text in self.texts:
+                    if text.name == "price":
+                        text.text = f"1개당 가격:    0원"
+                    elif text.name == "select_count":
+                        text.text = str(self.select_count)
+                    elif text.name == "total_price":
+                        text.text = f"최종 가격:    0원"
