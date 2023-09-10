@@ -20,13 +20,15 @@ class Animation:
             
             if self.property_alpha[property] >= 1:
                 self.properties_to_remove.append(property)
-                
                 continue
             if property == "Alpha":
                 
                 self.obj.alpha =  min(max((value[0] - value[1]) * self.property_alpha[property] + value[1], 0), 255)
                 
                 self.property_alpha[property] = (pygame.time.get_ticks() - self.property_start_time[property]) / self.property_time[property]
+
+                if self.property_alpha[property] >= 1:
+                    self.obj.alpha = value[0]
             
         for property in self.properties_to_remove:
             self.properties.pop(property)
