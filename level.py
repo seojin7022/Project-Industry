@@ -1,4 +1,4 @@
-import pygame, os, json, copy
+import pygame, threading, time
 from pygame._sdl2 import *
 from settings import *
 from tile import Tile
@@ -63,6 +63,8 @@ class Level:
             "Shop": [self.shop_gui_sprites, self.shop_system],
             "Contract": [self.contract_gui_sprites, self.contract_system],
         }
+
+        self.ui_no_machine = pygame.image.load("./gui/UI_No_Machine.png")
 
         self.create_map()
         
@@ -175,12 +177,13 @@ class Level:
                 if self.edit_system.delete_mode:
 
                     if self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] != "0":
-                        self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] = "0"
 
                         for sprite in self.machine_sprites.sprites():
                             if type(sprite) == Machine:
                                 if sprite.position == self.edit_system.delete_pos:
                                     sprite.kill()
+                                    self.app[2]["Machines"][self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]]] += 1
+                        self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] = "0"
                     else:
                     
                         self.map[self.edit_system.delete_pos[0]][ self.edit_system.delete_pos[1]] = "0"
@@ -190,14 +193,33 @@ class Level:
                                     sprite.kill()
                 else:
                     if type(self.edit_system.conveyer) == Machine:
-                        if not self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] in ["0","E", "S"]:
-                            newMachine = Machine(self.edit_system.conveyer.image, self.app, name=self.edit_system.conveyer.name)
-                            newMachine.image.alpha = 255
-                            newMachine.position = self.edit_system.conveyer.position
-                            self.machine_map[newMachine.position[0]][newMachine.position[1]] = newMachine.name
-                            newMachine.rect.topleft = (newMachine.position[0] * TILE_SIZE, newMachine.position[1] * TILE_SIZE)
-                            self.machine_sprites.add(newMachine)
-                            self.app[2]["Machines"][self.edit_system.conveyer.name.replace("UI_Edit_", "")] -= 1
+                        if not self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] in ["0","E", "S"] and self.machine_map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] == "0":
+                            if self.app[2]["Machines"][self.edit_system.conveyer.name.replace("UI_Edit_", "")] > 0:
+                                newMachine = Machine(self.edit_system.conveyer.image, self.app, name=self.edit_system.conveyer.name)
+                                newMachine.image.alpha = 255
+                                newMachine.position = self.edit_system.conveyer.position
+                                self.machine_map[newMachine.position[0]][newMachine.position[1]] = newMachine.name
+                                newMachine.rect.topleft = (newMachine.position[0] * TILE_SIZE, newMachine.position[1] * TILE_SIZE)
+                                self.machine_sprites.add(newMachine)
+                                self.app[2]["Machines"][self.edit_system.conveyer.name.replace("UI_Edit_", "")] -= 1
+                            else:
+                                
+                                def a(obj):
+                                    time.sleep(1)
+                                    self.edit_gui_sprites.frames.remove(obj)
+                                    del obj
+                                    
+
+                                UI_No_Machine = Frame(Image(Texture.from_surface(self.renderer, self.ui_no_machine)))
+                                UI_No_Machine.rect
+                                UI_No_Machine.rect.bottomleft = pygame.mouse.get_pos()
+                                UI_No_Machine.animation = Animation(UI_No_Machine.image)
+                                UI_No_Machine.image.alpha = 0
+                                UI_No_Machine.animation.add_property("Alpha", 255, 300, 0)
+                                self.edit_gui_sprites.frames.append(UI_No_Machine)
+                                self.animation_sprites.add(UI_No_Machine)
+                                threading.Thread(target=a, kwargs={"obj": UI_No_Machine}).start()
+                                
                     else:
                         if self.map[self.edit_system.delete_pos[0]][self.edit_system.delete_pos[1]] == "0":
                             newConveyer = Conveyer(self.edit_system.conveyer.image,self.app,  direction=self.edit_system.conveyer.direction)

@@ -92,12 +92,12 @@ class Scroll(GUI):
                 if self.direction == "h":
                     
 
-                    self.offset[0] += clamp(50, (current_mouse_pos[0] - self.prior_mouse_pos[0])) * 0.2
+                    self.offset[0] += clamp(50, (current_mouse_pos[0] - self.prior_mouse_pos[0])) * 0.8
 
                     self.offset[0] = max(min(0, self.offset[0]), -500)
 
                 elif self.direction == "v":
-                    self.offset[1] += clamp(50, (current_mouse_pos[1] - self.prior_mouse_pos[1])) * 0.2
+                    self.offset[1] += clamp(50, (current_mouse_pos[1] - self.prior_mouse_pos[1])) * 0.8
 
                     self.offset[1] = max(min(0, self.offset[1]), -(int(len(self.children) / self.max_count)) * self.children[0].rect.height)
 
@@ -203,7 +203,7 @@ class GUIFrame(pygame.sprite.Group):
                 newButton.name = button.split(".")[0]
                 self.buttons.append(newButton)
                 value.add_children(newButton)
-                self.scrolls.append(value)
+            self.scrolls.append(value)
 
     def custom_draw(self):
         

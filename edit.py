@@ -53,8 +53,7 @@ class Edit:
         elif button.name == "UI_Edit_CVB_RB":
             self.conveyer = Conveyer(pygame.image.load("./img/Tiles/CVB-3.png"),self.app, direction="RB")
         elif button.name == "UI_Edit_Peel_Machine":
-            if self.app[2]["Machines"][button.name.replace("UI_Edit_", "")] > 0:
-                self.conveyer = Machine(pygame.image.load(f"./img/Tiles/{button.name.replace('UI_Edit_', '')}.png"),self.app, name=button.name.replace('UI_Edit_', ''))
+            self.conveyer = Machine(pygame.image.load(f"./img/Tiles/{button.name.replace('UI_Edit_', '')}.png"),self.app, name=button.name.replace('UI_Edit_', ''))
                 
         elif button.name == "B_Delete":
             if self.delete_mode:
@@ -78,7 +77,7 @@ class Edit:
                     self.conveyer.position = floor.position
                 self.delete_pos = floor.position
 
-        if self.conveyer != None:
+        if type(self.conveyer) == Conveyer:
             keyboard = pygame.key.get_pressed()
 
             if keyboard[pygame.K_r] and not self.r_pressed:
@@ -88,7 +87,7 @@ class Edit:
             elif not keyboard[pygame.K_r]:
                 self.r_pressed = False
 
-            self.app[1].blit(self.conveyer.image, self.conveyer.rect)
+        self.app[1].blit(self.conveyer.image, self.conveyer.rect)
 
 class EditGUI(GUIFrame):
     def __init__(self, app) -> None:

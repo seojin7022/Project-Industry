@@ -27,7 +27,7 @@ class Shop:
             self.select_count = max(1, self.select_count - 1)
         elif button.name == "B_NumUp":
             self.select_count = min(99, self.select_count + 1)
-        elif button.name == "B_Purchase":
+        elif button.name == "B_Purchase" and self.selected_machine != None:
             if self.app[2]["Money"] >= shop_items[self.selected_machine] * self.select_count:
                 if self.app[2]["Machines"].get(self.selected_machine):
                     self.app[2]["Machines"][self.selected_machine] += self.select_count
