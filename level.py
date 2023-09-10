@@ -268,9 +268,28 @@ class Level:
         if pygame.time.get_ticks() - self.last_produce_time > 1000:
             if self.startpoint[0] < MAP_SIZE[0] - 1:
                 
-                if not (self.map[self.startpoint[0] + 1][self.startpoint[1]] in ["0", "E"]):
+                if not (self.map[self.startpoint[0] + 1][self.startpoint[1]] in ["0", "E"]) and self.map[self.startpoint[0] + 1][self.startpoint[1]][0] == "R":
                     Ingredient(self.ingredient_sprites, "Oak", self.app, position=(self.startpoint[0] + 1, self.startpoint[1]))
                     self.last_produce_time = pygame.time.get_ticks()
+
+            if self.startpoint[0] > 0:
+                
+                if not (self.map[self.startpoint[0] - 1][self.startpoint[1]] in ["0", "E"]) and self.map[self.startpoint[0] - 1][self.startpoint[1]][0] == "L":
+                    Ingredient(self.ingredient_sprites, "Oak", self.app, position=(self.startpoint[0] - 1, self.startpoint[1]))
+                    self.last_produce_time = pygame.time.get_ticks()
+
+            if self.startpoint[1] < MAP_SIZE[1] - 1:
+                
+                if not (self.map[self.startpoint[0]][self.startpoint[1] + 1] in ["0", "E"]) and self.map[self.startpoint[0]][self.startpoint[1] + 1][0] == "B":
+                    Ingredient(self.ingredient_sprites, "Oak", self.app, position=(self.startpoint[0], self.startpoint[1] + 1))
+                    self.last_produce_time = pygame.time.get_ticks()
+            if self.startpoint[1] > 0:
+                
+                if not (self.map[self.startpoint[0]][self.startpoint[1] - 1] in ["0", "E"]) and self.map[self.startpoint[0]][self.startpoint[1] - 1][0] == "T":
+                    Ingredient(self.ingredient_sprites, "Oak", self.app, position=(self.startpoint[0], self.startpoint[1] - 1))
+                    self.last_produce_time = pygame.time.get_ticks()
+            
+             
 
     def convey(self):
         for ingredient in self.ingredient_sprites.sprites():
@@ -282,7 +301,7 @@ class Level:
                 continue
             elif direction == "E":
                 ingredient.kill()
-                self.app[2]["Inventory"][ingredient.name + str(ingredient.count)] += 1
+                self.app[2]["Inventory"][ingredient.name+ "_" + str(ingredient.count)] += 1
                 continue
             
             if len(direction) == 2:

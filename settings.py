@@ -4,7 +4,7 @@ FPS = 60
 MAP_SIZE = (30, 30)
 
 shop_items = {
-    "Peel_Machine": 1000
+    "Peel_Machine": 350
 }
 
 contracts = {
@@ -41,10 +41,10 @@ contracts = {
 }
 
 ingredient_price = {
-    "Oak_0": 100,
-    "Oak_1": 200,
-    "Oak_2": 400,
-    "Oak_3": 1000
+    "Oak_0": 30,
+    "Oak_1": 60,
+    "Oak_2": 120,
+    "Oak_3": 300
 }
 
 ingredient_real_name = {
