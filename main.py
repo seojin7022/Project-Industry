@@ -1,10 +1,10 @@
-import os, ctypes, json, cv2
+import os, ctypes, json
 
 with open(f"./requirements.txt", 'r') as requirements:
     for requirement in requirements.readlines():
        os.system(f"pip install {requirement}")
 
-import init
+import init, cv2
 import pygame, sys
 from pygame._sdl2 import *
 from settings import *
